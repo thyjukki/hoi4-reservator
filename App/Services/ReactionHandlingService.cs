@@ -29,7 +29,7 @@ namespace Reservator.Services
 
         private string BuildReservationMessage(Game game)
         {
-            var message = "__**Current reservations:**__";
+            var message = $"__**Current reservations ({game.Reservations.Count}):**__";
 
             var faction = "";
             foreach (var country in _countryConfigService.CountryConfig.Countries)
