@@ -1,5 +1,18 @@
-FROM mcr.microsoft.com/dotnet/runtime:5.0
+﻿FROM mcr.microsoft.com/dotnet/runtime:5.0 AS base
+WORKDIR /app
 
-COPY bin/Release/net5.0/publish/ App/
-WORKDIR /App
-ENTRYPOINT ["dotnet", "NetCore.Docker.dll"]
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /src
+COPY ["App/Reservator.csproj", "App/"]
+RUN dotnet restore "App/Reservator.csproj"
+COPY . .
+WORKDIR "/src/App"
+RUN dotnet build "Reservator.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Reservator.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Reservator.dll"]
