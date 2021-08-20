@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Reservator.Models;
 
 namespace Reservator.Services
 {
@@ -13,11 +14,13 @@ namespace Reservator.Services
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
+        private readonly GameContext _gameContext;
 
         public CommandHandlingService(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
+            _gameContext = services.GetRequiredService<GameContext>();
             _services = services;
 
             // Hook CommandExecuted to handle post-command-execution logic.

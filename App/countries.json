@@ -1,0 +1,114 @@
+{
+  "countries": [
+    {
+      "Name": "USA",
+      "Emoji": "\uD83C\uDDFA\uD83C\uDDF8",
+      "Side": "allies"
+    },
+    {
+      "Name": "UK",
+      "Emoji": "\uD83C\uDDEC\uD83C\uDDE7",
+      "Side": "allies"
+    },
+    {
+      "Name": "France",
+      "Emoji": "\uD83C\uDDEB\uD83C\uDDF7",
+      "Side": "allies"
+    },
+    {
+      "Name": "South Africa",
+      "Emoji": "\uD83C\uDDFF\uD83C\uDDE6",
+      "Side": "allies"
+    },
+    {
+      "Name": "British Raj",
+      "Emoji": "\uD83C\uDDEE\uD83C\uDDF3",
+      "Side": "allies"
+    },
+    {
+      "Name": "Australia",
+      "Emoji": "\uD83C\uDDE6\uD83C\uDDFA",
+      "Side": "allies"
+    },
+    {
+      "Name": "Canada",
+      "Emoji": "\uD83C\uDDE8\uD83C\uDDE6",
+      "Side": "allies"
+    },
+    {
+      "Name": "Brazil",
+      "Emoji": "\uD83C\uDDE7\uD83C\uDDF7",
+      "Side": "allies"
+    },
+    {
+      "Name": "Mexico",
+      "Emoji": "\uD83C\uDDF2\uD83C\uDDFD",
+      "Side": "allies"
+    },
+    {
+      "Name": "New Zealand",
+      "Emoji": "\uD83C\uDDF3\uD83C\uDDFF",
+      "Side": "allies"
+    },
+    {
+      "Name": "Soviet",
+      "Emoji": "\uD83C\uDDF7\uD83C\uDDFA",
+      "Side": "comitern"
+    },
+    {
+      "Name": "Germany",
+      "Emoji": "\uD83C\uDDE9\uD83C\uDDEA",
+      "Side": "axis"
+    },
+    {
+      "Name": "Italy",
+      "Emoji": "\uD83C\uDDEE\uD83C\uDDF9",
+      "Side": "axis"
+    },
+    {
+      "Name": "Spain",
+      "Emoji": "\uD83C\uDDEA\uD83C\uDDF8",
+      "Side": "axis"
+    },
+    {
+      "Name": "Romania",
+      "Emoji": "\uD83C\uDDF7\uD83C\uDDF4",
+      "Side": "axis"
+    },
+    {
+      "Name": "Hungary",
+      "Emoji": "\uD83C\uDDED\uD83C\uDDFA",
+      "Side": "axis"
+    },
+    {
+      "Name": "Bulgaria",
+      "Emoji": "\uD83C\uDDE7\uD83C\uDDEC",
+      "Side": "axis"
+    },
+    {
+      "Name": "Finland",
+      "Emoji": "\uD83C\uDDEB\uD83C\uDDEE",
+      "Side": "axis"
+    },
+    {
+      "Name": "Japan",
+      "Emoji": "\uD83C\uDDEF\uD83C\uDDF5",
+      "Side": "copro"
+    },
+    {
+      "Name": "Manchukuo",
+      "Emoji": "\uD83C\uDFF3️\u200D\uD83C\uDF08",
+      "Side": "copro"
+    },
+    {
+      "Name": "Siam",
+      "Emoji": "\uD83C\uDDF9\uD83C\uDDED",
+      "Side": "copro"
+    },
+    {
+      "Name": "China",
+      "Emoji": "\uD83C\uDDF9\uD83C\uDDFC",
+      "Side": "unaligned"
+    }
+  ]
+}

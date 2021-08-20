@@ -1,11 +1,14 @@
 ﻿using System;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Reservator.Models;
 using Reservator.Services;
 
 namespace Reservator
@@ -21,9 +24,15 @@ namespace Reservator
             // when you are finished using it, at the end of your app's lifetime.
             // If you use another dependency injection framework, you should inspect
             // its documentation for the best way to do this.
-            using (var services = ConfigureServices())
+            var config = new DiscordSocketConfig
             {
-                var client = services.GetRequiredService<DiscordSocketClient>();
+                AlwaysDownloadUsers = true,
+                MessageCacheSize = 100
+            };
+            var client = new DiscordSocketClient(config);
+            var services = ConfigureServices(client);
+            //using (var services = ConfigureServices())
+            {
 
                 client.Log += LogAsync;
                 services.GetRequiredService<CommandService>().Log += LogAsync;
@@ -35,10 +44,12 @@ namespace Reservator
 
                 // Here we initialize the logic required to register our commands.
                 await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+                services.GetRequiredService<ReactionHandlingService>();
 
                 await Task.Delay(Timeout.Infinite);
             }
         }
+        
 
         private Task LogAsync(LogMessage log)
         {
@@ -47,12 +58,18 @@ namespace Reservator
             return Task.CompletedTask;
         }
         
-        private ServiceProvider ConfigureServices()
+        private ServiceProvider ConfigureServices(DiscordSocketClient discordSocketClient)
         {
+            var sqlitePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"reservator");
+            if (!Directory.Exists(sqlitePath)) Directory.CreateDirectory(sqlitePath);
             return new ServiceCollection()
-                .AddSingleton<DiscordSocketClient>()
+                .AddDbContext<GameContext>(options => options.UseSqlite($@"Data Source={sqlitePath}\sqlite.db"))
+                .AddSingleton<CountryConfigService>()
+                .AddSingleton(discordSocketClient)
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
+                .AddSingleton<ReactionHandlingService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<PictureService>()
                 .BuildServiceProvider();
