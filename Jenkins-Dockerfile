@@ -1,9 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
-WORKDIR /src
-ENV PATH="$PATH:/src/.dotnet/tools"
-COPY ["App/Reservator.csproj", "App/"]
+ENV PATH="$PATH:~/.dotnet/tools"
 RUN dotnet restore "App/Reservator.csproj"
 RUN dotnet tool install --global dotnet-sonarscanner --version 5.2.2
-
-COPY . .
 
