@@ -39,13 +39,19 @@ pipeline {
     }
     stage("Docker push") {
       steps {
+        rtBuildInfo (
+          buildName: 'reservator'
+        )
         rtDockerPush(
-            serverId: 'jukki-artifactory',
-            image:  'thyjukki/reservator:latest',
-            targetRepo: 'docker-local',
-            // Jenkins spawns a new java process during this step's execution.
-            // You have the option of passing any java args to this new process.
-            javaArgs: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+          serverId: 'jukki-artifactory',
+          image:  'thyjukki/reservator:latest',
+          targetRepo: 'docker-local',
+          // Jenkins spawns a new java process during this step's execution.
+          // You have the option of passing any java args to this new process.
+          javaArgs: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+        )
+        rtPublishBuildInfo (
+          serverId: 'jukki-artifactory'
         )
       }
     }
