@@ -1,7 +1,7 @@
 pipeline {
     agent { 
       dockerfile {
-          dir './App/to/dockerfile'
+          dir './App/dockerfile'
       }
     }
     stages {
