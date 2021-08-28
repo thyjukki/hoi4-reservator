@@ -9,7 +9,6 @@ pipeline {
       agent {
         docker {
           image 'nosinovacao/dotnet-sonar:21.07.1'
-          imagename = "thyjukki/reservator"
         }
       }
       steps {
