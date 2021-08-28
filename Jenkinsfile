@@ -1,5 +1,9 @@
 pipeline {
-    agent { dockerfile true }
+    agent { 
+      dockerfile {
+          dir './App/to/dockerfile'
+      }
+    }
     stages {
         stage('Test') {
             steps {
