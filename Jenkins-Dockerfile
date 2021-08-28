@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 ENV DOTNET_CLI_HOME = "/tmp/DOTNET_CLI_HOME"
 ENV PATH="$PATH:$DOTNET_CLI_HOME/.dotnet/tools"
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 RUN dotnet tool install --global dotnet-sonarscanner --version 5.2.2
 
