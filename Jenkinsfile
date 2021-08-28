@@ -1,14 +1,14 @@
 pipeline {
-    agent { 
-      dockerfile {
-          dir './App/'
+  agent { 
+    dockerfile {
+      filename './App/Dockerfile'
+    }
+  }
+  stages {
+    stage('Test') {
+      steps {
+        echo 'test'
       }
     }
-    stages {
-        stage('Test') {
-            steps {
-                echo 'test'
-            }
-        }
-    }
+  }
 }
