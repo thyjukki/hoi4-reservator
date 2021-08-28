@@ -33,11 +33,11 @@ pipeline {
     stage("Build") {
       steps {
         script {
-          app = docker.build("thyjukki/reservator:0.${BUILD_NUMBER}", "-f App/Dockerfile")
+          app = docker.build("thyjukki/reservator:0.${BUILD_NUMBER}", "-f App/Dockerfile .")
         }
       }
     }
-    /*stage("Docker push") {
+    stage("Docker push") {
       steps {
         rtDockerPush(
             serverId: 'jukki-artifactory',
@@ -48,6 +48,6 @@ pipeline {
             javaArgs: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
         )
       }
-    }*/
+    }
   }
 }
