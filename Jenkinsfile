@@ -11,19 +11,18 @@ pipeline {
     stage('setup') {
       steps {
         sh 'dotnet restore "App/Reservator.csproj"'
-        sh 'dotnet tool install --global dotnet-sonarscanner --version 5.2.2'
       }
     }
     stage('SonarQube') {
       steps {
         withSonarQubeEnv('SonarQube Jukki') {
-          sh '''/tmp/DOTNET_CLI_HOME/.dotnet/tools/dotnet-sonarscanner begin \
+          sh '''sudo /tmp/DOTNET_CLI_HOME/.dotnet/tools/dotnet-sonarscanner begin \
                  /k:"reservator" \
                  /n:"reservator" \
                  /d:sonar.exclusions="**/wwwroot/**, **/obj/**, **/bin/**" \
                  /d:sonar.host.url="https://sonarqube.jukk.it"'''
           sh 'dotnet build "App/Reservator.csproj" -c Release'
-          sh 'dotnet sonarscanner end'
+          sh 'sudo /tmp/DOTNET_CLI_HOME/.dotnet/tools/dotnet-sonarscanner end'
         }
       }
     }
