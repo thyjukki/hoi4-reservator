@@ -33,8 +33,9 @@ pipeline {
     stage("Build") {
       steps {
         script {
-          app = docker.build("thyjukki/reservator", "-f App/Dockerfile .")
-          app.tag(["0.${BUILD_NUMBER}","latest"])
+          def image = docker.build("thyjukki/reservator", "-f App/Dockerfile .")
+          image.tag("0.${BUILD_NUMBER}")
+          image.tag("latest")
         }
       }
     }
