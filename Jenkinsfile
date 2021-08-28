@@ -16,16 +16,14 @@ pipeline {
     }
     stage('SonarQube') {
       steps {
-        withEnv(["PATH+MAVEN=/tmp/DOTNET_CLI_HOME/.dotnet/tools"]) {
-          withSonarQubeEnv('SonarQube Jukki') {
-            sh '''dotnet sonarscanner begin \
-                   /k:"reservator" \
-                   /n:"reservator" \
-                   /d:sonar.exclusions="**/wwwroot/**, **/obj/**, **/bin/**" \
-                   /d:sonar.host.url="https://sonarqube.jukk.it"'''
-            sh 'dotnet build "App/Reservator.csproj" -c Release'
-            sh 'dotnet sonarscanner end'
-          }
+        withSonarQubeEnv('SonarQube Jukki') {
+          sh '''/tmp/DOTNET_CLI_HOME/.dotnet/tools/dotnet-sonarscanner begin \
+                 /k:"reservator" \
+                 /n:"reservator" \
+                 /d:sonar.exclusions="**/wwwroot/**, **/obj/**, **/bin/**" \
+                 /d:sonar.host.url="https://sonarqube.jukk.it"'''
+          sh 'dotnet build "App/Reservator.csproj" -c Release'
+          sh 'dotnet sonarscanner end'
         }
       }
     }
