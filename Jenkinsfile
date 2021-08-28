@@ -33,9 +33,7 @@ pipeline {
     stage("Build") {
       steps {
         script {
-          dir ("App") {
-            app = docker.build("jukki.jfrog.io/reservator:0.${BUILD_NUMBER}") 
-          } 
+          app = docker.build("thyjukki/reservator:0.${BUILD_NUMBER}", "-f App/Dockerfile")
         }
       }
     }
@@ -43,7 +41,7 @@ pipeline {
       steps {
         rtDockerPush(
             serverId: 'jukki-artifactory',
-            image:  'jukki.jfrog.io/reservator:latest',
+            image:  'thyjukki/reservator:latest',
             targetRepo: 'docker-local',
             // Jenkins spawns a new java process during this step's execution.
             // You have the option of passing any java args to this new process.
