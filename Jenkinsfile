@@ -1,30 +1,56 @@
 pipeline {
-  agent {
-    dockerfile {
-      filename 'Jenkins-Dockerfile'
-    }
-  }
+  agent { label 'linux' }
   environment {
-      DOTNET_CLI_HOME = "/tmp/DOTNET_CLI_HOME"
+      HOME='/tmp/home'
+      DOTNET_CLI_TELEMETRY_OPTOUT=1
   }
   stages {
-    stage('setup') {
-      steps {
-        sh 'dotnet restore "App/Reservator.csproj"'
-      }
-    }
     stage('SonarQube') {
+      agent {
+        docker {
+          image 'nosinovacao/dotnet-sonar:21.07.1'
+          imagename = "thyjukki/reservator"
+        }
+      }
       steps {
         withSonarQubeEnv('SonarQube Jukki') {
-          sh '''sudo /tmp/DOTNET_CLI_HOME/.dotnet/tools/dotnet-sonarscanner begin \
+          sh '''dotnet /sonar-scanner/SonarScanner.MSBuild.dll begin \
                  /k:"reservator" \
                  /n:"reservator" \
                  /d:sonar.exclusions="**/wwwroot/**, **/obj/**, **/bin/**" \
                  /d:sonar.host.url="https://sonarqube.jukk.it"'''
           sh 'dotnet build "App/Reservator.csproj" -c Release'
-          sh 'sudo /tmp/DOTNET_CLI_HOME/.dotnet/tools/dotnet-sonarscanner end'
+          sh 'dotnet /sonar-scanner/SonarScanner.MSBuild.dll end'
         }
       }
     }
+    stage("Quality Gate") {
+      steps {
+        timeout(time: 30, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+    stage("Build") {
+      steps {
+        script {
+          dir ("App") {
+            app = docker.build("jukki.jfrog.io/reservator:0.${BUILD_NUMBER}") 
+          } 
+        }
+      }
+    }
+    /*stage("Docker push") {
+      steps {
+        rtDockerPush(
+            serverId: 'jukki-artifactory',
+            image:  'jukki.jfrog.io/reservator:latest',
+            targetRepo: 'docker-local',
+            // Jenkins spawns a new java process during this step's execution.
+            // You have the option of passing any java args to this new process.
+            javaArgs: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+        )
+      }
+    }*/
   }
 }
