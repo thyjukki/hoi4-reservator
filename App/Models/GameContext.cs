@@ -25,7 +25,7 @@ namespace Reservator.Models
     
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<GuildRoles>().HasKey(vf=> new {vf.GuildId, vf.RoleId, vf.Type});
+            modelBuilder.Entity<GuildRoles>().HasKey(vf=> new {vf.GuildId, vf.RoleId, Permission = vf.Permission});
         }
     }
 }

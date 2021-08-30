@@ -12,8 +12,10 @@ namespace Reservator.Models
         [Key, Column(Order = 1)]
         public ulong GuildId { get; set; }
         
-        [Key, Column(Order = 2)]
-        public string Type { get; set; }
+        [Required]
+        [StringLength(50)]
+        [Key, Column(Order = 2, TypeName = "VARCHAR")]
+        public string Permission { get; set; }
     }
     
 }

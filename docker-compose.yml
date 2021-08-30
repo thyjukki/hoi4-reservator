@@ -16,6 +16,8 @@ services:
     depends_on:
       - db
   db:
+    hostname: 'sqlserver'
+    user: root
     image: mcr.microsoft.com/mssql/server
     volumes:
       - mssql-server-reservator-data:/var/opt/mssql/data

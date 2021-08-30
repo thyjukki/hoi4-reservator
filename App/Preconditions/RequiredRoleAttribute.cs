@@ -20,7 +20,7 @@ namespace Reservator.Preconditions
             
             return Task.FromResult(
                 database.GuildRoles.ToList().Exists(_ =>
-                    context.Guild.Id == _.GuildId && gUser.Roles.Any(r => r.Id == _.RoleId) && _.Type == "admin")
+                    context.Guild.Id == _.GuildId && gUser.Roles.Any(r => r.Id == _.RoleId) && _.Permission == "admin")
                     ? PreconditionResult.FromSuccess()
                     : PreconditionResult.FromError($"You must have a needed role to run this command."));
         }

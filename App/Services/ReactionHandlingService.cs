@@ -89,14 +89,13 @@ namespace Reservator.Services
 
                 var hasDeniedRole = HasRole(channel, gUser, "deny");
                 var hasRestrictedRole = HasRole(channel, gUser, "restricted");
-                    
+
                 var country = Utilities.GetCountryFromEmote(_countryConfigService, reaction.Emote);
                 if (reaction.Emote.Name is not ("✋" or "❌") && country == null) return;
 
-                foreach (var reservation in game.Reservations)
+                foreach (var reservation in game.Reservations.Where(reservation => reservation.User == reaction.UserId)
+                    .ToList())
                 {
-                    if (reservation.User != reaction.UserId) continue;
-
                     _database.Reservations.Remove(reservation);
                 }
 
@@ -131,16 +130,17 @@ namespace Reservator.Services
         private bool HasRole(SocketGuildChannel channel, SocketGuildUser gUser, string role)
         {
             var hasDeniedRole = _database.GuildRoles.ToList().Exists(_ =>
-                channel.Guild.Id == _.GuildId && gUser.Roles.Any(r => r.Id == _.RoleId) && _.Type == role);
+                channel.Guild.Id == _.GuildId && gUser.Roles.Any(r => r.Id == _.RoleId) && _.Permission == role);
             return hasDeniedRole;
         }
 
-        private static async Task<IMessage> GetMessageIfCached(SocketTextChannel channel, ulong gameReactionsAlliesMessageId) =>
+        private static async Task<IMessage> GetMessageIfCached(SocketTextChannel channel,
+            ulong gameReactionsAlliesMessageId) =>
             channel.GetCachedMessage(gameReactionsAlliesMessageId) ??
             await channel.GetMessageAsync(gameReactionsAlliesMessageId);
 
         private static async void ClearFromReactions(IMessage message, SocketReaction reaction, List<Task> taskList)
-        {                
+        {
             foreach (var (emote, _) in message.Reactions)
             {
                 var users = await message.GetReactionUsersAsync(emote, 10).FlattenAsync();

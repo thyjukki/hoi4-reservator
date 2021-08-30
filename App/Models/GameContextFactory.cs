@@ -20,7 +20,7 @@ namespace Reservator.Models
                 .Replace("ENVUSER", configuration["DB_USER"])
                 .Replace("ENVPW", configuration["DB_PW"])
                 .ToString();
-            optionsBuilder.UseSqlite(configuration["ConnectionStrings:ConnectionMssql"]);
+            optionsBuilder.UseSqlServer(conn);
 
             return new GameContext(optionsBuilder.Options);
         }

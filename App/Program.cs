@@ -85,7 +85,7 @@ namespace Reservator
                 .ToString();
 
             return new ServiceCollection()
-                .AddDbContext<GameContext>(options => options.UseSqlite(conn))
+                .AddDbContext<GameContext>(options => options.UseSqlServer(conn))
                 .AddSingleton<CountryConfigService>()
                 .AddSingleton(discordSocketClient)
                 .AddSingleton<CommandService>()
