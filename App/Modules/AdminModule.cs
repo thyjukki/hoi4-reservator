@@ -26,7 +26,7 @@ namespace Reservator.Modules
         public async Task NewGame(IChannel channel = null)
         {
             var toChannel = channel ?? Context.Channel;
-            foreach (var game in _database.Games.ToList().Where(game => toChannel.Id == game.ChannelId || Context.Guild.Id == game.GuildId))
+            foreach (var game in _database.Games.AsEnumerable().Where(game => toChannel.Id == game.ChannelId || Context.Guild.Id == game.GuildId))
             {
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
                 var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
@@ -89,7 +89,7 @@ namespace Reservator.Modules
         public async Task RemoveGame(IChannel channel = null)
         {
             var toChannel = channel ?? Context.Channel;
-            foreach (var game in _database.Games.ToList().Where(game => toChannel.Id == game.ChannelId || Context.Guild.Id == game.GuildId))
+            foreach (var game in _database.Games.AsEnumerable().Where(game => toChannel.Id == game.ChannelId || Context.Guild.Id == game.GuildId))
             {
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
                 var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
