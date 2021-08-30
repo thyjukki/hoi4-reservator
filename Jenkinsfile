@@ -16,7 +16,8 @@ pipeline {
           sh '''dotnet /sonar-scanner/SonarScanner.MSBuild.dll begin \
                  /k:"reservator" \
                  /n:"reservator" \
-                 /d:sonar.exclusions="**/wwwroot/**, **/obj/**, **/bin/**" \
+                 /d:sonar.exclusions="**/wwwroot/**, **/obj/**, **/bin/**, **/Migrations/**" \
+                 /d:sonar.coverage.exclusions="**"
                  /d:sonar.host.url="https://sonarqube.jukk.it"'''
           sh 'dotnet build "App/Reservator.csproj" -c Release'
           sh 'dotnet /sonar-scanner/SonarScanner.MSBuild.dll end'

@@ -73,8 +73,6 @@ namespace Reservator.Services
             if (channel != null && gUser != null && reaction.User.IsSpecified &&
                 reaction.User.Value != message.Author)
             {
-                Console.WriteLine($"{reaction.User.Value} just added a reaction '{reaction.Emote}' " +
-                                  $"to {message.Author}'s message ({message.Id}).");
                 var game = _database.Games.FirstOrDefault(_ => _.GuildId == channel.Guild.Id && (
                     _.ReactionsAlliesMessageId == message.Id || _.ReactionsAxisMessageId == message.Id ||
                     _.ReactionsOtherMessageId == message.Id));

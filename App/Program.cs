@@ -67,10 +67,6 @@ namespace Reservator
             var configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddEnvironmentVariables();
             Configuration = configurationBuilder.Build();
-            foreach (var env in Configuration.GetChildren())
-            {
-                Console.WriteLine($"{env.Key}:{env.Value}");
-            }
         }
 
         private IConfigurationRoot Configuration { get; set; }
