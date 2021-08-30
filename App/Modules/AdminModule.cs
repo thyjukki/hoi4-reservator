@@ -7,6 +7,7 @@ using Discord.WebSocket;
 using Reservator.Models;
 using Reservator.Preconditions;
 using Reservator.Services;
+using Game = Reservator.Models.Game;
 
 namespace Reservator.Modules
 {
@@ -21,12 +22,16 @@ namespace Reservator.Modules
             _countryConfigs = countryConfig;
         }
 
+
+        private IEnumerable<Game> GetGames(ulong channelId, ulong guildId) => _database.Games.AsEnumerable()
+            .Where(game => channelId == game.ChannelId && Context.Guild.Id == guildId);
+
         [Command("newgame")]
         [RequireManager]
         public async Task NewGame(IChannel channel = null)
         {
             var toChannel = channel ?? Context.Channel;
-            foreach (var game in _database.Games.AsEnumerable().Where(game => toChannel.Id == game.ChannelId || Context.Guild.Id == game.GuildId))
+            foreach (var game in GetGames(toChannel.Id, Context.Guild.Id))
             {
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
                 var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
@@ -48,14 +53,18 @@ namespace Reservator.Modules
                 replyReservations = await ReplyAsync("__**Current reservations:**__");
                 replyReactionsAllies = await ReplyAsync("Click on reaction to reserver/unreserve\nAllies:");
                 replyReactionsAxis = await ReplyAsync("Axis:");
-                replyReactionsOther = await ReplyAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
+                replyReactionsOther =
+                    await ReplyAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
             }
             else
             {
-                replyReservations = await Context.Guild.GetTextChannel(channel.Id).SendMessageAsync("__**Current reservations:**__");
-                replyReactionsAllies = await Context.Guild.GetTextChannel(channel.Id).SendMessageAsync("Click on reaction to reserver/unreserve\nAllies:");
+                replyReservations = await Context.Guild.GetTextChannel(channel.Id)
+                    .SendMessageAsync("__**Current reservations:**__");
+                replyReactionsAllies = await Context.Guild.GetTextChannel(channel.Id)
+                    .SendMessageAsync("Click on reaction to reserver/unreserve\nAllies:");
                 replyReactionsAxis = await Context.Guild.GetTextChannel(channel.Id).SendMessageAsync("Axis:");
-                replyReactionsOther = await Context.Guild.GetTextChannel(channel.Id).SendMessageAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
+                replyReactionsOther = await Context.Guild.GetTextChannel(channel.Id)
+                    .SendMessageAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
             }
 
             _database.Add(new Models.Game
@@ -89,7 +98,7 @@ namespace Reservator.Modules
         public async Task RemoveGame(IChannel channel = null)
         {
             var toChannel = channel ?? Context.Channel;
-            foreach (var game in _database.Games.AsEnumerable().Where(game => toChannel.Id == game.ChannelId || Context.Guild.Id == game.GuildId))
+            foreach (var game in GetGames(toChannel.Id, Context.Guild.Id))
             {
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
                 var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
@@ -105,100 +114,48 @@ namespace Reservator.Modules
             await _database.SaveChangesAsync();
         }
 
-        [Command("addmanagerole")]
-        [Summary("Add roles that can create reservations")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task AddRoleAllowed([Remainder] [Summary("Role to give rights to setup games")] IRole role)
-        {
-            if (_database.GuildRoles.ToList().Exists(_ => _.GuildId == Context.Guild.Id && _.RoleId == role.Id && _.Permission == "admin"))
-            {
-                return ReplyAsync("Role has already been assigned admin");
-            }
 
-            _database.GuildRoles.Add(new GuildRoles { GuildId = Context.Guild.Id, RoleId = role.Id, Permission = "admin" });
-            _database.SaveChanges();
-            return ReplyAsync("Role added as manager");
+        private bool ExistsPermission(IRole role, string permission)
+        {
+            return _database.GuildRoles.ToList().Exists(_ =>
+                _.GuildId == Context.Guild.Id && _.RoleId == role.Id && _.Permission == permission);
         }
 
-        [Command("adddenyrole")]
-        [Summary("Add roles that can not reserve games")]
+        [Command("addpermission")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task AddRoleDeny([Remainder] [Summary("Role to give deny right to reserve")] IRole role)
+        public Task AddPermissionToRole([Remainder] [Summary("Role to give permission")] IRole role, string permission)
         {
-            if (_database.GuildRoles.ToList().Exists(_ => _.GuildId == Context.Guild.Id && _.RoleId == role.Id && _.Permission == "deny"))
+            if (permission != "admin" && permission != "deny" && permission != "restricted")
+                return ReplyAsync("Allowed permissions are admin,  deny and restricted");
+            if (ExistsPermission(role, permission))
             {
-                return ReplyAsync("Role has already been denied reserving");
+                return ReplyAsync("Role has already been assigned {permission}");
             }
 
-            _database.GuildRoles.Add(new GuildRoles { GuildId = Context.Guild.Id, RoleId = role.Id, Permission = "deny" });
+            _database.GuildRoles.Add(new GuildRoles
+                { GuildId = Context.Guild.Id, RoleId = role.Id, Permission = permission });
             _database.SaveChanges();
-            return ReplyAsync("Role marked as dennied");
+            return ReplyAsync($"Role added as {permission}");
         }
 
-        [Command("addrestrictedrole")]
-        [Summary("Add roles that can only show up")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task AddRoleRestricted([Remainder] [Summary("Role to give only showup right")] IRole role)
-        {
-            if (_database.GuildRoles.ToList().Exists(_ => _.GuildId == Context.Guild.Id && _.RoleId == role.Id && _.Permission == "restricted"))
-            {
-                return ReplyAsync("Role has already been restricted");
-            }
 
-            _database.GuildRoles.Add(new GuildRoles { GuildId = Context.Guild.Id, RoleId = role.Id, Permission = "restricted" });
-            _database.SaveChanges();
-            return ReplyAsync("Role marked as restricted");
-        }
-
-        [Command("removemanagerole")]
-        [Summary("Remove roles that can create reservations")]
+        [Command("removepermission")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task RemoveRoleAllowed([Remainder] [Summary("Role to remove rights to setup games")] IRole role)
+        public Task RemovePermissionFromRole([Remainder] [Summary("Role to remove permission from")] IRole role,
+            string permission)
         {
-            foreach (var guildRole in _database.GuildRoles.ToList())
+            if (permission != "admin" && permission != "deny" && permission != "restricted")
+                return ReplyAsync("Allowed permissions are admin,  deny and restricted");
+            foreach (var guildRole in _database.GuildRoles.ToList().Where(guildRole =>
+                guildRole.GuildId == Context.Guild.Id && guildRole.RoleId == role.Id &&
+                guildRole.Permission == permission))
             {
-                if (guildRole.GuildId != Context.Guild.Id || guildRole.RoleId != role.Id ||
-                    guildRole.Permission != "admin") continue;
                 _database.GuildRoles.Remove(guildRole);
                 _database.SaveChanges();
-                return ReplyAsync("Role removed from being a manager");
+                return ReplyAsync("Permission removed from role");
             }
-            
-            return ReplyAsync("Role has not been assigned as manager");
-        }
 
-        [Command("removedenyrole")]
-        [Summary("Add roles that can not reserve games")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task RemoveRoleDeny([Remainder] [Summary("Role to remove denied rights to reserve")] IRole role)
-        {
-            foreach (var guildRole in _database.GuildRoles.ToList())
-            {
-                if (guildRole.GuildId != Context.Guild.Id || guildRole.RoleId != role.Id ||
-                    guildRole.Permission != "deny") continue;
-                _database.GuildRoles.Remove(guildRole);
-                _database.SaveChanges();
-                return ReplyAsync("Role removed from being denied");
-            }
-            
-            return ReplyAsync("Role has not been assigned as denied");
-        }
-
-        [Command("removerestrictedrole")]
-        [Summary("Add roles that can only show up")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task RemoveRoleRestricted([Remainder] [Summary("Role to remove restricted reserve")] IRole role)
-        {
-            foreach (var guildRole in _database.GuildRoles.ToList())
-            {
-                if (guildRole.GuildId != Context.Guild.Id || guildRole.RoleId != role.Id ||
-                    guildRole.Permission != "restricted") continue;
-                _database.GuildRoles.Remove(guildRole);
-                _database.SaveChanges();
-                return ReplyAsync("Role removed from being restricted");
-            }
-            
-            return ReplyAsync("Role has not been assigned as restricted");
+            return ReplyAsync("Role has not been assigned the permission");
         }
     }
 }
