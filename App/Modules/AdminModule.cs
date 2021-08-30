@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using Reservator.Models;
 using Reservator.Preconditions;
 using Reservator.Services;
@@ -51,7 +50,7 @@ namespace Reservator.Modules
             if (channel == null)
             {
                 replyReservations = await ReplyAsync("__**Current reservations:**__");
-                replyReactionsAllies = await ReplyAsync("Click on reaction to reserver/unreserve\nAllies:");
+                replyReactionsAllies = await ReplyAsync("Click on reaction to reserve/unreserve\nAllies:");
                 replyReactionsAxis = await ReplyAsync("Axis:");
                 replyReactionsOther =
                     await ReplyAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
@@ -61,13 +60,13 @@ namespace Reservator.Modules
                 replyReservations = await Context.Guild.GetTextChannel(channel.Id)
                     .SendMessageAsync("__**Current reservations:**__");
                 replyReactionsAllies = await Context.Guild.GetTextChannel(channel.Id)
-                    .SendMessageAsync("Click on reaction to reserver/unreserve\nAllies:");
+                    .SendMessageAsync("Click on reaction to reserve/unreserve\nAllies:");
                 replyReactionsAxis = await Context.Guild.GetTextChannel(channel.Id).SendMessageAsync("Axis:");
                 replyReactionsOther = await Context.Guild.GetTextChannel(channel.Id)
                     .SendMessageAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
             }
 
-            _database.Add(new Models.Game
+            _database.Add(new Game
             {
                 ReservationMessageId = replyReservations.Id,
                 ReactionsAlliesMessageId = replyReactionsAllies.Id,
@@ -114,20 +113,14 @@ namespace Reservator.Modules
             await _database.SaveChangesAsync();
         }
 
-
-        private bool ExistsPermission(IRole role, string permission)
-        {
-            return _database.GuildRoles.ToList().Exists(_ =>
-                _.GuildId == Context.Guild.Id && _.RoleId == role.Id && _.Permission == permission);
-        }
-
         [Command("addpermission")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public Task AddPermissionToRole([Remainder] [Summary("Role to give permission")] IRole role, string permission)
         {
             if (permission != "admin" && permission != "deny" && permission != "restricted")
                 return ReplyAsync("Allowed permissions are admin,  deny and restricted");
-            if (ExistsPermission(role, permission))
+            if (_database.GuildRoles.ToList().Exists(_ =>
+                _.GuildId == Context.Guild.Id && _.RoleId == role.Id && _.Permission == permission))
             {
                 return ReplyAsync("Role has already been assigned {permission}");
             }
@@ -146,16 +139,16 @@ namespace Reservator.Modules
         {
             if (permission != "admin" && permission != "deny" && permission != "restricted")
                 return ReplyAsync("Allowed permissions are admin,  deny and restricted");
-            foreach (var guildRole in _database.GuildRoles.ToList().Where(guildRole =>
-                guildRole.GuildId == Context.Guild.Id && guildRole.RoleId == role.Id &&
-                guildRole.Permission == permission))
-            {
-                _database.GuildRoles.Remove(guildRole);
-                _database.SaveChanges();
-                return ReplyAsync("Permission removed from role");
-            }
 
-            return ReplyAsync("Role has not been assigned the permission");
+            var guildRole = _database.GuildRoles.FirstOrDefault(guildRole =>
+                guildRole.GuildId == Context.Guild.Id && guildRole.RoleId == role.Id &&
+                guildRole.Permission == permission);
+
+            if (guildRole == null) return ReplyAsync("Role has not been assigned the permission");
+
+            _database.GuildRoles.Remove(guildRole);
+            _database.SaveChanges();
+            return ReplyAsync("Permission removed from role");
         }
     }
 }
