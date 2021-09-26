@@ -55,12 +55,12 @@ pipeline {
         )
       }
     }
-    stage('Deploy App') {
+    /*stage('Deploy App') {
       steps {
         dir("kube") {
           kubernetesDeploy(configs: "reservator.yaml", kubeconfigId: "jukki-cluster")
         }
       }
-    }
+    }*/
   }
 }

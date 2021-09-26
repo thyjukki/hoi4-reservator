@@ -41,6 +41,11 @@
       "Side": "allies"
     },
     {
+      "Name": "Ireland",
+      "Emoji": "\uD83C\uDDEE\uD83C\uDDEA",
+      "Side": "allies"
+    },
+    {
       "Name": "Mexico",
       "Emoji": "\uD83C\uDDF2\uD83C\uDDFD",
       "Side": "allies"
@@ -53,6 +58,11 @@
     {
       "Name": "Soviet",
       "Emoji": "\uD83C\uDDF7\uD83C\uDDFA",
+      "Side": "comitern"
+    },
+    {
+      "Name": "Mongolia",
+      "Emoji": "\uD83C\uDDF2\uD83C\uDDF3",
       "Side": "comitern"
     },
     {
@@ -88,6 +98,11 @@
     {
       "Name": "Finland",
       "Emoji": "\uD83C\uDDEB\uD83C\uDDEE",
+      "Side": "axis"
+    },
+    {
+      "Name": "Vichy France",
+      "Emoji": "\uD83C\uDFF3️",
       "Side": "axis"
     },
     {
