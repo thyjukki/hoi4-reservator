@@ -115,7 +115,7 @@ namespace Reservator.Modules
 
         [Command("addpermission")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task AddPermissionToRole([Remainder] [Summary("Role to give permission")] IRole role, string permission)
+        public Task AddPermissionToRole([Summary("Role to give permission")] IRole role, [Remainder] string permission)
         {
             if (permission != "admin" && permission != "deny" && permission != "restricted")
                 return ReplyAsync("Allowed permissions are admin,  deny and restricted");
@@ -134,8 +134,8 @@ namespace Reservator.Modules
 
         [Command("removepermission")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        public Task RemovePermissionFromRole([Remainder] [Summary("Role to remove permission from")] IRole role,
-            string permission)
+        public Task RemovePermissionFromRole([Summary("Role to remove permission from")] IRole role,
+            [Remainder] string permission)
         {
             if (permission != "admin" && permission != "deny" && permission != "restricted")
                 return ReplyAsync("Allowed permissions are admin,  deny and restricted");

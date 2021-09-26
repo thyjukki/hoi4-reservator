@@ -57,8 +57,8 @@ pipeline {
     }
     stage('Deploy App') {
       steps {
-        script {
-          kubernetesDeploy(configs: "./kube/reservator.yaml", kubeconfigId: "jukki-cluster")
+        dir("kube") {
+          kubernetesDeploy(configs: "reservator.yaml", kubeconfigId: "jukki-cluster")
         }
       }
     }
