@@ -80,8 +80,9 @@ namespace Reservator
                 .Replace("ENVPW", Configuration["DB_PW"])
                 .ToString();
 
+            var serverVersion = new MySqlServerVersion(new Version(8, 0, 22));
             return new ServiceCollection()
-                .AddDbContext<GameContext>(options => options.UseSqlServer(conn))
+                .AddDbContext<GameContext>(options => options.UseMySql(conn, serverVersion))
                 .AddSingleton<CountryConfigService>()
                 .AddSingleton(discordSocketClient)
                 .AddSingleton<CommandService>()

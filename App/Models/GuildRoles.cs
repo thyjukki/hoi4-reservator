@@ -14,7 +14,7 @@ namespace Reservator.Models
         
         [Required]
         [StringLength(50)]
-        [Key, Column(Order = 2, TypeName = "VARCHAR")]
+        [Key, Column(Order = 2, TypeName = "VARCHAR(MAX)")]
         public string Permission { get; set; }
     }
     

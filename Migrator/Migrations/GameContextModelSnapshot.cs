@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Reservator.Models;
 
@@ -14,32 +15,34 @@ namespace Reservator.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 64)
-                .HasAnnotation("ProductVersion", "5.0.9");
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("ProductVersion", "5.0.9")
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("Reservator.Models.Game", b =>
                 {
                     b.Property<int>("GameId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<ulong>("ChannelId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("decimal(20,0)");
 
-                    b.Property<ulong>("GuildId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("decimal(20,0)");
 
-                    b.Property<ulong>("ReactionsAlliesMessageId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("ReactionsAlliesMessageId")
+                        .HasColumnType("decimal(20,0)");
 
-                    b.Property<ulong>("ReactionsAxisMessageId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("ReactionsAxisMessageId")
+                        .HasColumnType("decimal(20,0)");
 
-                    b.Property<ulong>("ReactionsOtherMessageId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("ReactionsOtherMessageId")
+                        .HasColumnType("decimal(20,0)");
 
-                    b.Property<ulong>("ReservationMessageId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("ReservationMessageId")
+                        .HasColumnType("decimal(20,0)");
 
                     b.HasKey("GameId");
 
@@ -48,11 +51,11 @@ namespace Reservator.Migrations
 
             modelBuilder.Entity("Reservator.Models.GuildRoles", b =>
                 {
-                    b.Property<ulong>("GuildId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("decimal(20,0)");
 
-                    b.Property<ulong>("RoleId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("RoleId")
+                        .HasColumnType("decimal(20,0)");
 
                     b.Property<string>("Permission")
                         .HasMaxLength(50)
@@ -67,16 +70,17 @@ namespace Reservator.Migrations
                 {
                     b.Property<int>("ReservationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Country")
-                        .HasColumnType("longtext");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<ulong>("User")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<decimal>("User")
+                        .HasColumnType("decimal(20,0)");
 
                     b.HasKey("ReservationId");
 

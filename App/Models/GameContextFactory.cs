@@ -14,14 +14,17 @@ namespace Reservator.Models
             var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
             var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
             
-            var config = new StringBuilder("Server=ENVHOST;Database=ENVDB;User=ENVUSER;Password=ENVPW;");
+            var serverVersion = new MySqlServerVersion(new Version(8, 0, 22));
+            var config = new StringBuilder("server=ENVHOST;database=ENVDB;user=ENVUSER;password=ENVPW;");
             var conn = config.Replace("ENVHOST", configuration["DB_HOST"])
                 .Replace("ENVDB", configuration["DB_DATABASE"])
                 .Replace("ENVUSER", configuration["DB_USER"])
                 .Replace("ENVPW", configuration["DB_PW"])
                 .ToString();
-            optionsBuilder.UseSqlServer(conn);
+            
+            optionsBuilder.UseMySql(conn, serverVersion);
 
+  
             return new GameContext(optionsBuilder.Options);
         }
     }
