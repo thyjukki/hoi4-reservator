@@ -1,3 +1,4 @@
+def app = null
 pipeline {
   agent { label 'linux' }
   environment {
@@ -34,25 +35,18 @@ pipeline {
     stage("Build") {
       steps {
         script {
-          def image = docker.build("jukki.jfrog.io/docker-local/thyjukki/reservator", "-f App/Dockerfile .")
-          image.tag("0.${BUILD_NUMBER}")
-          image.tag("latest")
+          app = docker.build("thyjukki/reservator", "-f App/Dockerfile .")
         }
       }
     }
     stage("Docker push") {
       steps {
-        rtBuildInfo (
-          buildName: 'reservator'
-        )
-        rtDockerPush(
-          serverId: 'jukki-artifactory',
-          image:  'jukki.jfrog.io/docker-local/thyjukki/reservator:latest',
-          targetRepo: 'docker-local'
-        )
-        rtPublishBuildInfo (
-          serverId: 'jukki-artifactory'
-        )
+        script {
+          docker.withRegistry('https://nexus.jukk.it', 'nexus-jenkins-user' ) {
+            app.push("0.${BUILD_NUMBER}")            
+            app.push("latest") 
+          }
+        }
       }
     }
     /*stage('Deploy App') {
