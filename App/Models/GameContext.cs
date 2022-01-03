@@ -13,7 +13,8 @@ namespace Reservator.Models
             : base(options)
         {
         }
-    
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuildRoles>().HasKey(vf=> new {vf.GuildId, vf.RoleId, Permission = vf.Permission});

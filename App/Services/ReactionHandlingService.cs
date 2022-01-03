@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Reservator.Models;
 using Game = Reservator.Models.Game;
@@ -38,24 +39,20 @@ namespace Reservator.Services
             if (channel != null && gUser != null && reaction.User.IsSpecified &&
                 reaction.User.Value != message.Author)
             {
-                var game = _database.Games.FirstOrDefault(_ => _.GuildId == channel.Guild.Id && (
+                var game = _database.Games.Include(b => b.Reservations).FirstOrDefault(_ => _.GuildId == channel.Guild.Id && (
                     _.ReactionsAlliesMessageId == message.Id || _.ReactionsAxisMessageId == message.Id ||
                     _.ReactionsOtherMessageId == message.Id));
 
                 if (game == null) return;
 
 
-                await HandleGameReaction(reaction, channel, game, gUser);
+                await HandleGameReaction(reaction, channel, game, gUser, message);
             }
         }
 
         private async Task HandleGameReaction(SocketReaction reaction, SocketTextChannel channel, Game game,
-            SocketGuildUser gUser)
+            SocketGuildUser gUser, IMessage message)
         {
-            var reactionAlliesMessage = await GetMessageIfCached(channel, game.ReactionsAlliesMessageId);
-            var reactionAxisMessage = await GetMessageIfCached(channel, game.ReactionsAxisMessageId);
-            var reservationOtherMessage = await GetMessageIfCached(channel, game.ReactionsOtherMessageId);
-            var reservationsMessage = await GetMessageIfCached(channel, game.ReservationMessageId);
 
             var hasDeniedRole = HasRole(channel, gUser, "deny");
             var hasRestrictedRole = HasRole(channel, gUser, "restricted");
@@ -83,16 +80,14 @@ namespace Reservator.Services
             await _database.SaveChangesAsync();
 
             var content = Utilities.BuildReservationMessage(_countryConfigService, _discord, game);
+            
+            var reservationsMessage = await GetMessageIfCached(channel, game.ReservationMessageId);
             if (reservationsMessage != null)
             {
                 await ((IUserMessage)reservationsMessage).ModifyAsync(x => { x.Content = content; });
             }
             
-            var taskList = new List<Task>();
-            await ClearFromReactions(reactionAlliesMessage, reaction, taskList);
-            await ClearFromReactions(reactionAxisMessage, reaction, taskList);
-            await ClearFromReactions(reservationOtherMessage, reaction, taskList);
-            Task.WaitAll(taskList.ToArray());
+            await message.RemoveReactionAsync(reaction.Emote, reaction.UserId);
         }
 
         private bool HasRole(SocketGuildChannel channel, SocketGuildUser gUser, string role)
@@ -107,15 +102,5 @@ namespace Reservator.Services
             channel.GetCachedMessage(gameReactionsAlliesMessageId) ??
             await channel.GetMessageAsync(gameReactionsAlliesMessageId);
 
-        private static async Task ClearFromReactions(IMessage message, SocketReaction reaction, List<Task> taskList)
-        {
-            foreach (var (emote, _) in message.Reactions)
-            {
-                var users = await message.GetReactionUsersAsync(emote, 10).FlattenAsync();
-                taskList.AddRange(from user in users
-                    where user.Id == reaction.UserId
-                    select message.RemoveReactionAsync(emote, reaction.UserId));
-            }
-        }
     }
 }

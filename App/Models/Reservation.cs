@@ -1,4 +1,6 @@
-﻿namespace Reservator.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Reservator.Models
 {
     public class Reservation
     {

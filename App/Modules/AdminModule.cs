@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Microsoft.EntityFrameworkCore;
 using Reservator.Models;
 using Reservator.Preconditions;
 using Reservator.Services;
@@ -20,9 +21,6 @@ namespace Reservator.Modules
             _database = database;
             _countryConfigs = countryConfig;
         }
-
-        private IEnumerable<Game> GetGames(ulong channelId, ulong guildId) => _database.Games.AsEnumerable()
-            .Where(game => channelId == game.ChannelId && Context.Guild.Id == guildId);
 
         [Command("newgame")]
         [RequireManager]
@@ -77,7 +75,8 @@ namespace Reservator.Modules
 
         private async Task ClearOldGames(IChannel toChannel)
         {
-            foreach (var game in GetGames(toChannel.Id, Context.Guild.Id))
+            var games = _database.Games.Include(b => b.Reservations).ToList().Where(game => toChannel.Id == game.ChannelId && Context.Guild.Id == game.GuildId);
+            foreach (var game in games)
             {
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
                 var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
@@ -88,7 +87,8 @@ namespace Reservator.Modules
                 oldReactionAxisMessage?.DeleteAsync();
                 oldReactionOtherMessage?.DeleteAsync();
 
-                game.Reservations.Clear();
+                foreach (var reservation in game.Reservations.ToList())
+                    _database.Reservations.Remove(reservation);
                 _database.Games.Remove(game);
             }
         }
