@@ -37,3 +37,8 @@ msbuild.wrn
 .vs/
 
 .env
+.env.dev
+.env.master
+
+kube/
+
