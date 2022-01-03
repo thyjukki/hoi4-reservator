@@ -27,41 +27,6 @@ namespace Reservator.Services
             _discord.ReactionAdded += ReactionAddedAsync;
         }
 
-        private string BuildReservationMessage(Game game)
-        {
-            var message = $"__**Current reservations ({game.Reservations.Count}):**__";
-
-            var faction = "";
-            foreach (var country in _countryConfigService.CountryConfig.Countries)
-            {
-                if (country.Side != faction)
-                {
-                    var playerCount = game.Reservations.Count(_ =>
-                        Utilities.IsInFaction(_countryConfigService, _.Country, country.Side));
-
-                    message += $"\n\n**{country.Side} ({playerCount})**";
-                    faction = country.Side;
-                }
-
-                var reservations = game.Reservations.Where(_ => _.Country == country.Name).ToList();
-                message += $"\n{country.Emoji} {country.Name}: ";
-
-                if (reservations.Count <= 0) continue;
-
-                message += "**";
-                message += string.Join("' ",
-                    reservations.Select(_ => _discord.GetUser(_.User)).Select(_ => _.Mention));
-                message += "**";
-            }
-
-            var showUp = game.Reservations.Where(_ => _.Country == null).ToList();
-            message += $"\n\n**Will show up ({showUp.Count})**";
-            message += string.Join("\n",
-                showUp.Select(_ => _discord.GetUser(_.User)).Select(_ => _.Mention));
-
-            return message;
-        }
-
         private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> cachedMessage,
             Cacheable<IMessageChannel, ulong> originChannel, SocketReaction reaction)
         {
@@ -110,7 +75,7 @@ namespace Reservator.Services
 
                 await _database.SaveChangesAsync();
 
-                var content = BuildReservationMessage(game);
+                var content = Utilities.BuildReservationMessage(_countryConfigService, _discord, game);
                 if (reservationsMessage != null)
                 {
                     await ((IUserMessage)reservationsMessage).ModifyAsync(x => { x.Content = content; });

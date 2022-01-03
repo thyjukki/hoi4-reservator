@@ -21,27 +21,6 @@ namespace Reservator.Modules
             _countryConfigs = countryConfig;
         }
 
-        private string BuildReservationMessage()
-        {
-            var message = $"__**Current reservations (0):**__";
-
-            var faction = "";
-            foreach (var country in _countryConfigs.CountryConfig.Countries)
-            {
-                if (country.Side != faction)
-                {
-                    message += $"\n\n**{country.Side} (0)**";
-                    faction = country.Side;
-                }
-
-                message += $"\n{country.Emoji} {country.Name}: ";
-            }
-
-            message += $"\n\n**Will show up (0)**";
-
-            return message;
-        }
-
         private IEnumerable<Game> GetGames(ulong channelId, ulong guildId) => _database.Games.AsEnumerable()
             .Where(game => channelId == game.ChannelId && Context.Guild.Id == guildId);
 
@@ -65,28 +44,13 @@ namespace Reservator.Modules
                 _database.Games.Remove(game);
             }
 
-            IUserMessage replyReservations;
-            IUserMessage replyReactionsAllies;
-            IUserMessage replyReactionsAxis;
-            IUserMessage replyReactionsOther;
-            if (channel == null)
-            {
-                replyReservations = await ReplyAsync(BuildReservationMessage());
-                replyReactionsAllies = await ReplyAsync("Click on reaction to reserve/unreserve\nAllies:");
-                replyReactionsAxis = await ReplyAsync("Axis:");
-                replyReactionsOther =
-                    await ReplyAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
-            }
-            else
-            {
-                replyReservations = await Context.Guild.GetTextChannel(channel.Id)
-                    .SendMessageAsync(BuildReservationMessage());
-                replyReactionsAllies = await Context.Guild.GetTextChannel(channel.Id)
-                    .SendMessageAsync("Click on reaction to reserve/unreserve\nAllies:");
-                replyReactionsAxis = await Context.Guild.GetTextChannel(channel.Id).SendMessageAsync("Axis:");
-                replyReactionsOther = await Context.Guild.GetTextChannel(channel.Id)
-                    .SendMessageAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
-            }
+            var replyReservations = await Context.Guild.GetTextChannel(toChannel.Id)
+                .SendMessageAsync(Utilities.BuildReservationMessage(_countryConfigs));
+            var replyReactionsAllies = await Context.Guild.GetTextChannel(toChannel.Id)
+                .SendMessageAsync("Click on reaction to reserve/unreserve\nAllies:");
+            var replyReactionsAxis = await Context.Guild.GetTextChannel(toChannel.Id).SendMessageAsync("Axis:");
+            var replyReactionsOther = await Context.Guild.GetTextChannel(toChannel.Id)
+                .SendMessageAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
 
             _database.Add(new Game
             {
