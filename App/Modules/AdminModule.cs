@@ -29,20 +29,7 @@ namespace Reservator.Modules
         public async Task NewGame(IChannel channel = null)
         {
             var toChannel = channel ?? Context.Channel;
-            foreach (var game in GetGames(toChannel.Id, Context.Guild.Id))
-            {
-                var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
-                var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
-                var oldReactionAxisMessage = await Context.Channel.GetMessageAsync(game.ReactionsAxisMessageId);
-                var oldReactionOtherMessage = await Context.Channel.GetMessageAsync(game.ReactionsOtherMessageId);
-                oldReservationMessage?.DeleteAsync();
-                oldReactionAlliesMessage?.DeleteAsync();
-                oldReactionAxisMessage?.DeleteAsync();
-                oldReactionOtherMessage?.DeleteAsync();
-
-                game.Reservations?.Clear();
-                _database.Games.Remove(game);
-            }
+            await ClearOldGames(toChannel);
 
             var replyReservations = await Context.Guild.GetTextChannel(toChannel.Id)
                 .SendMessageAsync(Utilities.BuildReservationMessage(_countryConfigs));
@@ -83,6 +70,13 @@ namespace Reservator.Modules
         public async Task RemoveGame(IChannel channel = null)
         {
             var toChannel = channel ?? Context.Channel;
+            await ClearOldGames(toChannel);
+
+            await _database.SaveChangesAsync();
+        }
+
+        private async Task ClearOldGames(IChannel toChannel)
+        {
             foreach (var game in GetGames(toChannel.Id, Context.Guild.Id))
             {
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
@@ -97,8 +91,6 @@ namespace Reservator.Modules
                 game.Reservations.Clear();
                 _database.Games.Remove(game);
             }
-
-            await _database.SaveChangesAsync();
         }
 
         [Command("addpermission")]
