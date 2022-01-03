@@ -13,15 +13,6 @@ namespace Reservator.Models
             : base(options)
         {
         }
-        
-        // The following configures EF to create a Sqlite database file in the
-        // special "local" folder for your platform.
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
-        {
-            if (!options.IsConfigured)
-            {
-            }
-        }
     
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

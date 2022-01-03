@@ -45,49 +45,54 @@ namespace Reservator.Services
                 if (game == null) return;
 
 
-                var reactionAlliesMessage = await GetMessageIfCached(channel, game.ReactionsAlliesMessageId);
-                var reactionAxisMessage = await GetMessageIfCached(channel, game.ReactionsAxisMessageId);
-                var reservationOtherMessage = await GetMessageIfCached(channel, game.ReactionsOtherMessageId);
-                var reservationsMessage = await GetMessageIfCached(channel, game.ReservationMessageId);
-
-                var hasDeniedRole = HasRole(channel, gUser, "deny");
-                var hasRestrictedRole = HasRole(channel, gUser, "restricted");
-
-                var country = Utilities.GetCountryFromEmote(_countryConfigService, reaction.Emote);
-                if (reaction.Emote.Name is not ("✋" or "❌") && country == null) return;
-
-                foreach (var reservation in game.Reservations.Where(reservation => reservation.User == reaction.UserId)
-                    .ToList())
-                {
-                    _database.Reservations.Remove(reservation);
-                }
-
-                if (country != null && !hasRestrictedRole && !hasDeniedRole)
-                {
-                    _database.Reservations.Add(new Reservation
-                        { Country = country.Name, Game = game, User = reaction.UserId });
-                }
-                else if (reaction.Emote.Name == "✋" && !hasDeniedRole)
-                {
-                    _database.Reservations.Add(new Reservation
-                        { Country = null, Game = game, User = reaction.UserId });
-                }
-
-                await _database.SaveChangesAsync();
-
-                var content = Utilities.BuildReservationMessage(_countryConfigService, _discord, game);
-                if (reservationsMessage != null)
-                {
-                    await ((IUserMessage)reservationsMessage).ModifyAsync(x => { x.Content = content; });
-                }
-
-
-                var taskList = new List<Task>();
-                ClearFromReactions(reactionAlliesMessage, reaction, taskList);
-                ClearFromReactions(reactionAxisMessage, reaction, taskList);
-                ClearFromReactions(reservationOtherMessage, reaction, taskList);
-                Task.WaitAll(taskList.ToArray());
+                await HandleGameReaction(reaction, channel, game, gUser);
             }
+        }
+
+        private async Task HandleGameReaction(SocketReaction reaction, SocketTextChannel channel, Game game,
+            SocketGuildUser gUser)
+        {
+            var reactionAlliesMessage = await GetMessageIfCached(channel, game.ReactionsAlliesMessageId);
+            var reactionAxisMessage = await GetMessageIfCached(channel, game.ReactionsAxisMessageId);
+            var reservationOtherMessage = await GetMessageIfCached(channel, game.ReactionsOtherMessageId);
+            var reservationsMessage = await GetMessageIfCached(channel, game.ReservationMessageId);
+
+            var hasDeniedRole = HasRole(channel, gUser, "deny");
+            var hasRestrictedRole = HasRole(channel, gUser, "restricted");
+
+            var country = Utilities.GetCountryFromEmote(_countryConfigService, reaction.Emote);
+            if (reaction.Emote.Name is not ("✋" or "❌") && country == null) return;
+
+            var oldReservations = game.Reservations.Where(reservation => reservation.User == reaction.UserId);
+            foreach (var oldReservation in oldReservations)
+            {
+                _database.Reservations.Remove(oldReservation);
+            }
+
+            if (country != null && !hasRestrictedRole && !hasDeniedRole)
+            {
+                _database.Reservations.Add(new Reservation
+                    { Country = country.Name, Game = game, User = reaction.UserId });
+            }
+            else if (reaction.Emote.Name == "✋" && !hasDeniedRole)
+            {
+                _database.Reservations.Add(new Reservation
+                    { Country = null, Game = game, User = reaction.UserId });
+            }
+
+            await _database.SaveChangesAsync();
+
+            var content = Utilities.BuildReservationMessage(_countryConfigService, _discord, game);
+            if (reservationsMessage != null)
+            {
+                await ((IUserMessage)reservationsMessage).ModifyAsync(x => { x.Content = content; });
+            }
+            
+            var taskList = new List<Task>();
+            await ClearFromReactions(reactionAlliesMessage, reaction, taskList);
+            await ClearFromReactions(reactionAxisMessage, reaction, taskList);
+            await ClearFromReactions(reservationOtherMessage, reaction, taskList);
+            Task.WaitAll(taskList.ToArray());
         }
 
         private bool HasRole(SocketGuildChannel channel, SocketGuildUser gUser, string role)
@@ -102,7 +107,7 @@ namespace Reservator.Services
             channel.GetCachedMessage(gameReactionsAlliesMessageId) ??
             await channel.GetMessageAsync(gameReactionsAlliesMessageId);
 
-        private static async void ClearFromReactions(IMessage message, SocketReaction reaction, List<Task> taskList)
+        private static async Task ClearFromReactions(IMessage message, SocketReaction reaction, List<Task> taskList)
         {
             foreach (var (emote, _) in message.Reactions)
             {

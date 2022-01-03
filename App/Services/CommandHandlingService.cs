@@ -14,13 +14,12 @@ namespace Reservator.Services
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
-        private readonly GameContext _gameContext;
 
         public CommandHandlingService(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
-            _gameContext = services.GetRequiredService<GameContext>();
+            services.GetRequiredService<GameContext>();
             _services = services;
 
             // Hook CommandExecuted to handle post-command-execution logic.
@@ -58,7 +57,7 @@ namespace Reservator.Services
             // we will handle the result in CommandExecutedAsync,
         }
 
-        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        private static async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
         {
             // command is unspecified when there was a search failure (command not found); we don't care about these errors
             if (!command.IsSpecified)

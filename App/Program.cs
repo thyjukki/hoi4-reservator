@@ -93,7 +93,6 @@ namespace Reservator
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<ReactionHandlingService>()
                 .AddSingleton<HttpClient>()
-                .AddSingleton<PictureService>()
                 .BuildServiceProvider();
         }
     }
