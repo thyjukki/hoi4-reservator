@@ -37,7 +37,7 @@ namespace Reservator
             var db = services.GetRequiredService<GameContext>();
             if (!await db.Database.CanConnectAsync())
             {
-                throw new Exception($"No database connection.");
+                throw new ArgumentException($"No database connection. Check that network settings  are set properly");
             }
             if (Convert.ToBoolean(Configuration["DEV"]))
             {

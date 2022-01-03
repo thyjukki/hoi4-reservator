@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Text;
 using Discord;
 using Discord.WebSocket;
 using Reservator.Services;
@@ -16,7 +17,9 @@ namespace Reservator
         
         public static string BuildReservationMessage(CountryConfigService ccs, DiscordSocketClient discord = null, Game game = null)
         {
-            var message = $"__**Current reservations ({game?.Reservations.Count ?? 0}):**__";
+            var bld = new StringBuilder();
+
+            bld.Append($"__**Current reservations ({game?.Reservations.Count ?? 0}):**__");
 
             var faction = "";
             foreach (var country in ccs.CountryConfig.Countries)
@@ -25,31 +28,27 @@ namespace Reservator
                 {
                     var playerCount = game?.Reservations.Count(_ => IsInFaction(ccs, _.Country, country.Side)) ?? 0;
 
-                    message += $"\n\n**{country.Side} ({playerCount})**";
+                    bld.Append($"\n\n**{country.Side} ({playerCount})**");
                     faction = country.Side;
                 }
 
-                message += $"\n{country.Emoji} {country.Name}: ";
+                bld.Append($"\n{country.Emoji} {country.Name}: ");
 
                 var reservations = game?.Reservations.Where(_ => _.Country == country.Name).ToList();
                 if (discord == null || reservations is not { Count: > 0 }) continue;
 
-                message += "**";
-                message += string.Join("' ",
-                    reservations.Select(_ => discord.GetUser(_.User)).Select(_ => _.Mention));
-                message += "**";
+                bld.Append($"**{string.Join("' ",reservations.Select(_ => discord.GetUser(_.User)).Select(_ => _.Mention))}**");
             }
 
             var showUp = game?.Reservations.Where(_ => _.Country == null).ToList();
-            message += $"\n\n**Will show up ({showUp?.Count ?? 0})**";
+            bld.Append($"\n\n**Will show up ({showUp?.Count ?? 0})**");
 
             if (discord != null && showUp != null)
             {
-                message += string.Join("\n",
-                    showUp.Select(_ => discord.GetUser(_.User)).Select(_ => _.Mention));
+                bld.Append(string.Join("\n", showUp.Select(_ => discord.GetUser(_.User)).Select(_ => _.Mention)));
             }
 
-            return message;
+            return bld.ToString();
         }
     }
 }
