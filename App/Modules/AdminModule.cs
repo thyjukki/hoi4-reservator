@@ -21,6 +21,26 @@ namespace Reservator.Modules
             _countryConfigs = countryConfig;
         }
 
+        private string BuildReservationMessage()
+        {
+            var message = $"__**Current reservations (0):**__";
+
+            var faction = "";
+            foreach (var country in _countryConfigs.CountryConfig.Countries)
+            {
+                if (country.Side != faction)
+                {
+                    message += $"\n\n**{country.Side} (0)**";
+                    faction = country.Side;
+                }
+
+                message += $"\n{country.Emoji} {country.Name}: ";
+            }
+
+            message += $"\n\n**Will show up (0)**";
+
+            return message;
+        }
 
         private IEnumerable<Game> GetGames(ulong channelId, ulong guildId) => _database.Games.AsEnumerable()
             .Where(game => channelId == game.ChannelId && Context.Guild.Id == guildId);
@@ -35,9 +55,11 @@ namespace Reservator.Modules
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
                 var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
                 var oldReactionAxisMessage = await Context.Channel.GetMessageAsync(game.ReactionsAxisMessageId);
+                var oldReactionOtherMessage = await Context.Channel.GetMessageAsync(game.ReactionsOtherMessageId);
                 oldReservationMessage?.DeleteAsync();
                 oldReactionAlliesMessage?.DeleteAsync();
                 oldReactionAxisMessage?.DeleteAsync();
+                oldReactionOtherMessage?.DeleteAsync();
 
                 game.Reservations?.Clear();
                 _database.Games.Remove(game);
@@ -49,7 +71,7 @@ namespace Reservator.Modules
             IUserMessage replyReactionsOther;
             if (channel == null)
             {
-                replyReservations = await ReplyAsync("__**Current reservations:**__");
+                replyReservations = await ReplyAsync(BuildReservationMessage());
                 replyReactionsAllies = await ReplyAsync("Click on reaction to reserve/unreserve\nAllies:");
                 replyReactionsAxis = await ReplyAsync("Axis:");
                 replyReactionsOther =
@@ -58,7 +80,7 @@ namespace Reservator.Modules
             else
             {
                 replyReservations = await Context.Guild.GetTextChannel(channel.Id)
-                    .SendMessageAsync("__**Current reservations:**__");
+                    .SendMessageAsync(BuildReservationMessage());
                 replyReactionsAllies = await Context.Guild.GetTextChannel(channel.Id)
                     .SendMessageAsync("Click on reaction to reserve/unreserve\nAllies:");
                 replyReactionsAxis = await Context.Guild.GetTextChannel(channel.Id).SendMessageAsync("Axis:");
@@ -77,19 +99,19 @@ namespace Reservator.Modules
             });
             await _database.SaveChangesAsync();
 
-            await replyReactionsAllies.AddReactionsAsync(_countryConfigs.CountryConfig.Countries
+            _ = replyReactionsAllies.AddReactionsAsync(_countryConfigs.CountryConfig.Countries
                 .Where(_ => Utilities.IsInFaction(_countryConfigs, _.Name, "allies") ||
                             Utilities.IsInFaction(_countryConfigs, _.Name, "comitern") ||
                             Utilities.IsInFaction(_countryConfigs, _.Name, "unaligned"))
                 .Select(country => new Emoji(country.Emoji))
                 .Cast<IEmote>().ToArray());
-            await replyReactionsAxis.AddReactionsAsync(_countryConfigs.CountryConfig.Countries
+            _ = replyReactionsAxis.AddReactionsAsync(_countryConfigs.CountryConfig.Countries
                 .Where(_ => Utilities.IsInFaction(_countryConfigs, _.Name, "axis") ||
                             Utilities.IsInFaction(_countryConfigs, _.Name, "copro"))
                 .Select(country => new Emoji(country.Emoji))
                 .Cast<IEmote>().ToArray());
-            await replyReactionsOther.AddReactionAsync(new Emoji("✋"));
-            await replyReactionsOther.AddReactionAsync(new Emoji("❌"));
+            _ = replyReactionsOther.AddReactionAsync(new Emoji("✋"))
+                .ContinueWith(_ => replyReactionsOther.AddReactionAsync(new Emoji("❌")));
         }
 
         [Command("removegame")]
@@ -102,9 +124,11 @@ namespace Reservator.Modules
                 var oldReservationMessage = await Context.Channel.GetMessageAsync(game.ReservationMessageId);
                 var oldReactionAlliesMessage = await Context.Channel.GetMessageAsync(game.ReactionsAlliesMessageId);
                 var oldReactionAxisMessage = await Context.Channel.GetMessageAsync(game.ReactionsAxisMessageId);
+                var oldReactionOtherMessage = await Context.Channel.GetMessageAsync(game.ReactionsOtherMessageId);
                 oldReservationMessage?.DeleteAsync();
                 oldReactionAlliesMessage?.DeleteAsync();
                 oldReactionAxisMessage?.DeleteAsync();
+                oldReactionOtherMessage?.DeleteAsync();
 
                 game.Reservations.Clear();
                 _database.Games.Remove(game);

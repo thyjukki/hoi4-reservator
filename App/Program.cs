@@ -34,9 +34,13 @@ namespace Reservator
             };
             var client = new DiscordSocketClient(config);
             var services = ConfigureServices(client);
+            var db = services.GetRequiredService<GameContext>();
+            if (!await db.Database.CanConnectAsync())
+            {
+                throw new Exception($"No database connection.");
+            }
             if (Convert.ToBoolean(Configuration["DEV"]))
             {
-                var db = services.GetRequiredService<GameContext>();
                 await db.Database.MigrateAsync();
             }
             client.Log += LogAsync;
