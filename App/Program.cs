@@ -29,6 +29,7 @@ namespace Reservator
             // its documentation for the best way to do this.
             var config = new DiscordSocketConfig
             {
+                GatewayIntents = GatewayIntents.All,
                 AlwaysDownloadUsers = true,
                 MessageCacheSize = 100
             };

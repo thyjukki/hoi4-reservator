@@ -37,7 +37,7 @@ namespace Reservator
                 var reservations = game?.Reservations.Where(_ => _.Country == country.Name).ToList();
                 if (discord == null || reservations is not { Count: > 0 }) continue;
 
-                bld.Append($"**{string.Join("' ",reservations.Select(_ => discord.GetUser(_.User)).Select(_ => _.Mention))}**");
+                bld.Append($"**{string.Join("' ",reservations.Select(reservation  => discord.GetUser(reservation.User)).Select(user => user.Mention))}**");
             }
 
             var showUp = game?.Reservations.Where(_ => _.Country == null).ToList();
