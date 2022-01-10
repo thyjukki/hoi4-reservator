@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Reservator.Services;
@@ -15,7 +17,7 @@ namespace Reservator
         public static CountryConfig GetCountryFromEmote(CountryConfigService ccs, IEmote emote) =>
             ccs.CountryConfig.Countries.FirstOrDefault(_ => _.Emoji == emote.Name);
         
-        public static string BuildReservationMessage(CountryConfigService ccs, DiscordSocketClient discord = null, Game game = null)
+        public static async Task<string> BuildReservationMessage(CountryConfigService ccs, DiscordSocketClient discord = null, Game game = null)
         {
             var bld = new StringBuilder();
 
@@ -37,16 +39,27 @@ namespace Reservator
                 var reservations = game?.Reservations.Where(_ => _.Country == country.Name).ToList();
                 if (discord == null || reservations is not { Count: > 0 }) continue;
 
-                bld.Append($"**{string.Join("' ",reservations.Select(reservation  => discord.GetUser(reservation.User)).Select(user => user.Mention))}**");
+                var userNames = new List<string>();
+                foreach (var reservation in reservations)
+                {
+                    var user = discord.GetUser(reservation.User) ?? await discord.GetUserAsync(reservation.User);
+                    userNames.Add(user == null ? "Unknown user" : user.Mention);
+                }
+                bld.Append($"**{string.Join("' ",userNames)}**");
             }
 
             var showUp = game?.Reservations.Where(_ => _.Country == null).ToList();
             bld.Append($"\n\n**Will show up ({showUp?.Count ?? 0})**");
 
-            if (discord != null && showUp != null)
+            if (discord == null || showUp == null) return bld.ToString();
+
+            var showUpUserNames = new List<string>();
+            foreach (var reservation in showUp)
             {
-                bld.Append(string.Join("\n", showUp.Select(_ => discord.GetUser(_.User)).Select(_ => _.Mention)));
+                var user = discord.GetUser(reservation.User) ?? await discord.GetUserAsync(reservation.User);
+                showUpUserNames.Add(user == null ? "Unknown user" : user.Mention);
             }
+            bld.Append(string.Join("\n", showUpUserNames));
 
             return bld.ToString();
         }

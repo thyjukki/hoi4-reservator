@@ -29,8 +29,9 @@ namespace Reservator.Modules
             var toChannel = channel ?? Context.Channel;
             await ClearOldGames(toChannel);
 
+            var userMessages = await Utilities.BuildReservationMessage(_countryConfigs);
             var replyReservations = await Context.Guild.GetTextChannel(toChannel.Id)
-                .SendMessageAsync(Utilities.BuildReservationMessage(_countryConfigs));
+                .SendMessageAsync(userMessages);
             var replyReactionsAllies = await Context.Guild.GetTextChannel(toChannel.Id)
                 .SendMessageAsync("Click on reaction to reserve/unreserve\nAllies:");
             var replyReactionsAxis = await Context.Guild.GetTextChannel(toChannel.Id).SendMessageAsync("Axis:");

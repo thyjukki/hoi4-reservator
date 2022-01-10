@@ -79,7 +79,7 @@ namespace Reservator.Services
 
             await _database.SaveChangesAsync();
 
-            var content = Utilities.BuildReservationMessage(_countryConfigService, _discord, game);
+            var content = await Utilities.BuildReservationMessage(_countryConfigService, _discord, game);
             
             var reservationsMessage = await GetMessageIfCached(channel, game.ReservationMessageId);
             if (reservationsMessage != null)
