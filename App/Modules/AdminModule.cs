@@ -1,26 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Reservator.Models;
-using Reservator.Preconditions;
-using Reservator.Services;
-using Game = Reservator.Models.Game;
 
 namespace Reservator.Modules
 {
     public class AdminModule : ModuleBase<SocketCommandContext>
     {
         private readonly GameContext _database;
-        private readonly CountryConfigService _countryConfigs;
 
-        public AdminModule(GameContext database, CountryConfigService countryConfig)
+        public AdminModule(GameContext database)
         {
             _database = database;
-            _countryConfigs = countryConfig;
         }
 
         [Command("addpermission")]

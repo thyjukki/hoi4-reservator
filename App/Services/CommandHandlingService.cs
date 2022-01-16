@@ -98,7 +98,7 @@ namespace Reservator.Services
             }
             
             
-            var game = _database.Games.Include(b => b.Reservations).FirstOrDefault(_ => _.GuildId == toChannel.Guild.Id);
+            var game = _database.Games.Include(b => b.Reservations).FirstOrDefault(_ => _.GuildId == toChannel.Guild.Id && _.ChannelId == toChannel.Id);
             if (game == null)
             {
                 await command.RespondAsync("No game found in channel");

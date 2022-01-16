@@ -18,13 +18,9 @@ namespace Reservator
 
         public static CountryConfig GetCountryFromEmote(CountryConfigService ccs, IEmote emote) =>
             ccs.CountryConfig.Countries.FirstOrDefault(_ => _.Emoji == emote.Name);
-        
-        public static async Task<string> BuildReservationMessage(CountryConfigService ccs, DiscordSocketClient discord = null, Game game = null)
+
+        private static async Task BuildCountryList(CountryConfigService ccs, StringBuilder bld, DiscordSocketClient discord, Game game)
         {
-            var bld = new StringBuilder();
-
-            bld.Append($"__**Current reservations ({game?.Reservations.Count ?? 0}):**__");
-
             var faction = "";
             foreach (var country in ccs.CountryConfig.Countries)
             {
@@ -49,6 +45,14 @@ namespace Reservator
                 }
                 bld.Append($"**{string.Join("' ",userNames)}**");
             }
+        }
+        public static async Task<string> BuildReservationMessage(CountryConfigService ccs, DiscordSocketClient discord = null, Game game = null)
+        {
+            var bld = new StringBuilder();
+
+            bld.Append($"__**Current reservations ({game?.Reservations.Count ?? 0}):**__");
+
+            await BuildCountryList(ccs, bld, discord, game);
 
             var showUp = game?.Reservations.Where(_ => _.Country == null).ToList();
             bld.Append($"\n\n**Will show up ({showUp?.Count ?? 0})**");
@@ -69,7 +73,7 @@ namespace Reservator
         
         public static async Task ClearOldGames(IMessageChannel toChannel, IGuild guild, GameContext database)
         {
-            var games = database.Games.Include(b => b.Reservations).ToList().Where(game => toChannel.Id == game.ChannelId && guild.Id == game.GuildId);
+            var games = database.Games.Include(b => b.Reservations).AsEnumerable().Where(game => toChannel.Id == game.ChannelId && guild.Id == game.GuildId);
             foreach (var game in games)
             {
                 var oldReservationMessage = await toChannel.GetMessageAsync(game.ReservationMessageId);
