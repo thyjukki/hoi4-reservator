@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
+using Reservator.Models;
 using Reservator.Services;
 using Game = Reservator.Models.Game;
 
@@ -63,5 +65,40 @@ namespace Reservator
 
             return bld.ToString();
         }
+        
+        
+        public static async Task ClearOldGames(IMessageChannel toChannel, IGuild guild, GameContext database)
+        {
+            var games = database.Games.Include(b => b.Reservations).ToList().Where(game => toChannel.Id == game.ChannelId && guild.Id == game.GuildId);
+            foreach (var game in games)
+            {
+                var oldReservationMessage = await toChannel.GetMessageAsync(game.ReservationMessageId);
+                var oldReactionAlliesMessage = await toChannel.GetMessageAsync(game.ReactionsAlliesMessageId);
+                var oldReactionAxisMessage = await toChannel.GetMessageAsync(game.ReactionsAxisMessageId);
+                var oldReactionOtherMessage = await toChannel.GetMessageAsync(game.ReactionsOtherMessageId);
+                oldReservationMessage?.DeleteAsync();
+                oldReactionAlliesMessage?.DeleteAsync();
+                oldReactionAxisMessage?.DeleteAsync();
+                oldReactionOtherMessage?.DeleteAsync();
+
+                foreach (var reservation in game.Reservations.ToList())
+                    database.Reservations.Remove(reservation);
+                database.Games.Remove(game);
+            }
+        }
+
+        public static bool HasRole(SocketGuildChannel channel, GameContext  database, SocketGuildUser gUser, string role)
+        {
+            var hasDeniedRole = database.GuildRoles.ToList().Exists(_ =>
+                channel.Guild.Id == _.GuildId && gUser.Roles.Any(r => r.Id == _.RoleId) && _.Permission == role);
+            return hasDeniedRole;
+        }
+        
+        
+
+        public static async Task<IMessage> GetMessageIfCached(SocketTextChannel channel,
+            ulong gameReactionsAlliesMessageId) =>
+            channel.GetCachedMessage(gameReactionsAlliesMessageId) ??
+            await channel.GetMessageAsync(gameReactionsAlliesMessageId);
     }
 }

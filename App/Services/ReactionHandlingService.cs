@@ -54,8 +54,8 @@ namespace Reservator.Services
             SocketGuildUser gUser, IMessage message)
         {
 
-            var hasDeniedRole = HasRole(channel, gUser, "deny");
-            var hasRestrictedRole = HasRole(channel, gUser, "restricted");
+            var hasDeniedRole = Utilities.HasRole(channel, _database, gUser, "deny");
+            var hasRestrictedRole = Utilities.HasRole(channel, _database, gUser, "restricted");
 
             var country = Utilities.GetCountryFromEmote(_countryConfigService, reaction.Emote);
             if (reaction.Emote.Name is not ("✋" or "❌") && country == null) return;
@@ -81,7 +81,7 @@ namespace Reservator.Services
 
             var content = await Utilities.BuildReservationMessage(_countryConfigService, _discord, game);
             
-            var reservationsMessage = await GetMessageIfCached(channel, game.ReservationMessageId);
+            var reservationsMessage = await Utilities.GetMessageIfCached(channel, game.ReservationMessageId);
             if (reservationsMessage != null)
             {
                 await ((IUserMessage)reservationsMessage).ModifyAsync(x => { x.Content = content; });
@@ -89,18 +89,6 @@ namespace Reservator.Services
             
             await message.RemoveReactionAsync(reaction.Emote, reaction.UserId);
         }
-
-        private bool HasRole(SocketGuildChannel channel, SocketGuildUser gUser, string role)
-        {
-            var hasDeniedRole = _database.GuildRoles.ToList().Exists(_ =>
-                channel.Guild.Id == _.GuildId && gUser.Roles.Any(r => r.Id == _.RoleId) && _.Permission == role);
-            return hasDeniedRole;
-        }
-
-        private static async Task<IMessage> GetMessageIfCached(SocketTextChannel channel,
-            ulong gameReactionsAlliesMessageId) =>
-            channel.GetCachedMessage(gameReactionsAlliesMessageId) ??
-            await channel.GetMessageAsync(gameReactionsAlliesMessageId);
 
     }
 }
