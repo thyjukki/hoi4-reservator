@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -96,7 +95,7 @@ namespace Reservator.Services
                 return;
             }
 
-            var guildRoles = _database.GuildRoles.ToList().Where(guildRole => guildRole.GuildId == guildChannel.GuildId && guildRole.RoleId == role.Id).Select(_ => _.Permission).ToArray();
+            var guildRoles = _database.GuildRoles.AsEnumerable().Where(guildRole => guildRole.GuildId == guildChannel.GuildId && guildRole.RoleId == role.Id).Select(_ => _.Permission).ToArray();
 
             if (guildRoles.Length == 0)
             {
@@ -106,39 +105,46 @@ namespace Reservator.Services
             
             await command.RespondAsync($"{role.Name} has following permissions {string.Join(", ", guildRoles)}");
         }
-
-        private async Task HandleRemoveRoleCommand(SocketSlashCommand command)
+        
+        private static async Task<(IRole role, string permission, IGuildChannel guildChannel)> GetRoleParameters(SocketSlashCommand command)
         {
             var parameters = command.Data.Options.ToDictionary(x => x.Name, x => x.Value);
-            if(!parameters.TryGetValue("role", out var roleObj))
+            if (!parameters.TryGetValue("role", out var roleObj))
             {
                 await command.RespondAsync("No role specified");
-                return;
+                return (null, null, null);
             }
-            
-            if(!parameters.TryGetValue("permission", out var permissionObj))
+
+            if (!parameters.TryGetValue("permission", out var permissionObj))
             {
                 await command.RespondAsync("No permission specified");
-                return;
+                return (null, null, null);
             }
 
             if (roleObj is not IRole role)
             {
                 await command.RespondAsync("Need to be a valid guild role");
-                return;
+                return (null, null, null);
             }
+
             var permission = permissionObj as string;
             if (command.Channel is not IGuildChannel guildChannel)
             {
                 await command.RespondAsync("Need to be a guild channel");
-                return;
+                return (role, permission, null);
             }
 
-            if (permission != "admin" && permission != "deny" && permission != "restricted" && permission != "major")
-            {
-                await command.RespondAsync("Allowed permissions are admin, major deny and restricted");
-                return;
-            }
+            if (permission is "admin" or "deny" or "restricted" or "major")
+                return (role, permission, guildChannel);
+            await command.RespondAsync("Allowed permissions are admin, major deny and restricted");
+            return (role, permission, guildChannel);
+
+        }
+
+        private async Task HandleRemoveRoleCommand(SocketSlashCommand command)
+        {
+            var (role, permission, guildChannel) = await GetRoleParameters(command);
+            if (role == null || permission == null || guildChannel == null) return;
 
             var guildRole = _database.GuildRoles.FirstOrDefault(guildRole =>
                 guildRole.GuildId == guildChannel.GuildId && guildRole.RoleId == role.Id &&
@@ -157,40 +163,8 @@ namespace Reservator.Services
 
         private async Task HandleAddRoleCommand(SocketSlashCommand command)
         {
-            var parameters = command.Data.Options.ToDictionary(x => x.Name, x => x.Value);
-            if(!parameters.TryGetValue("role", out var roleObj))
-            {
-                await command.RespondAsync("No role specified");
-                return;
-            }
-            if(!parameters.TryGetValue("permission", out var permissionObj))
-            {
-                await command.RespondAsync("No permission specified");
-                return;
-            }
-
-            if (roleObj is not IRole role)
-            {
-                await command.RespondAsync("Need to be a valid guild role");
-                return;
-            }
-            var permission = permissionObj as string;
-            if (command.Channel is not IGuildChannel guildChannel)
-            {
-                await command.RespondAsync("Need to be a guild channel");
-                return;
-            }
-
-
-            if (permission != "admin" && permission != "major" && permission != "deny" && permission != "restricted")
-            {
-                await command.RespondAsync("Allowed permissions are admin, major, deny and restricted");
-                return;
-            }
-
-            var guildRole = _database.GuildRoles.FirstOrDefault(guildRole =>
-                guildRole.GuildId == guildChannel.GuildId && guildRole.RoleId == role.Id &&
-                guildRole.Permission == permission);
+            var (role, permission, guildChannel) = await GetRoleParameters(command);
+            if (role == null || permission == null || guildChannel == null) return;
 
             if (_database.GuildRoles.ToList().Exists(_ =>
                     _.GuildId == guildChannel.GuildId && _.RoleId == role.Id && _.Permission == permission))
