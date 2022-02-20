@@ -283,7 +283,15 @@ namespace Reservator.Services
                 .Cast<IEmote>().ToArray());
             _ = replyReactionsOther.AddReactionAsync(new Emoji("✋"))
                 .ContinueWith(_ => replyReactionsOther.AddReactionAsync(new Emoji("❌")));
-            await command.ModifyOriginalResponseAsync(m => m.Content = "Game added");
+
+            if (command.Channel.Id == guildChannel.Id)
+            {
+                await (await command.GetOriginalResponseAsync()).DeleteAsync();
+            }
+            else
+            {
+                await command.ModifyOriginalResponseAsync(m => m.Content = "Game added to another channel");
+            }
         }
 
         private async Task ClientReady()
