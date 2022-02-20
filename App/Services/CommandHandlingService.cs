@@ -72,7 +72,39 @@ namespace Reservator.Services
                 case "remove_role":
                     await HandleRemoveRoleCommand(command);
                     break;
+                case "list_roles":
+                    await HandleListRolesCommand(command);
+                    break;
             }
+        }
+
+        private async Task HandleListRolesCommand(SocketSlashCommand command)
+        {
+            var parameters = command.Data.Options.ToDictionary(x => x.Name, x => x.Value);
+            if(!parameters.TryGetValue("role", out var roleObj))
+            {
+                await command.RespondAsync("No role specified");
+            }
+            if (command.Channel is not IGuildChannel guildChannel)
+            {
+                await command.RespondAsync("Need to be a guild channel");
+                return;
+            }
+            if (roleObj is not IRole role)
+            {
+                await command.RespondAsync("Need to be a valid guild role");
+                return;
+            }
+
+            var guildRoles = _database.GuildRoles.ToList().Where(guildRole => guildRole.GuildId == guildChannel.GuildId && guildRole.RoleId == role.Id).Select(_ => _.Permission).ToArray();
+
+            if (guildRoles.Length == 0)
+            {
+                await command.RespondAsync("No permissions for given role");
+                return;
+            }
+            
+            await command.RespondAsync($"{role.Name} has following permissions {string.Join(", ", guildRoles)}");
         }
 
         private async Task HandleRemoveRoleCommand(SocketSlashCommand command)
@@ -83,6 +115,7 @@ namespace Reservator.Services
                 await command.RespondAsync("No role specified");
                 return;
             }
+            
             if(!parameters.TryGetValue("permission", out var permissionObj))
             {
                 await command.RespondAsync("No permission specified");
@@ -162,7 +195,7 @@ namespace Reservator.Services
             if (_database.GuildRoles.ToList().Exists(_ =>
                     _.GuildId == guildChannel.GuildId && _.RoleId == role.Id && _.Permission == permission))
             {
-                await command.RespondAsync("Role has already been assigned {permission}");
+                await command.RespondAsync($"Role has already been assigned {permission}");
                 return;
             }
 
@@ -313,15 +346,17 @@ namespace Reservator.Services
             var removeRoleCommand = new SlashCommandBuilder()
                 .WithName("remove_role")
                 .WithDescription("Remove role permission")
-                .AddOption("role", ApplicationCommandOptionType.Role, "Role to remove permissions from",
-                    isRequired: true)
+                .AddOption("role", ApplicationCommandOptionType.Role, "Role to remove permissions from", true)
                 .AddOption(permissionsListBuilder);
-                var addRoleCommand = new SlashCommandBuilder()
-                    .WithName("add_role")
-                    .WithDescription("Add role permission")
-                    .AddOption("role", ApplicationCommandOptionType.Role, "Role to add permissions to",
-                        isRequired: true)
+            var addRoleCommand = new SlashCommandBuilder()
+                .WithName("add_role")
+                .WithDescription("Add role permission")
+                .AddOption("role", ApplicationCommandOptionType.Role, "Role to add permissions to", true)
                 .AddOption(permissionsListBuilder);
+            var listRolesCommand = new SlashCommandBuilder()
+                .WithName("list_roles")
+                .WithDescription("List role permission")
+                .AddOption("role", ApplicationCommandOptionType.Role, "Role to list permissions of", true);
 
             try
             {
@@ -335,6 +370,8 @@ namespace Reservator.Services
                     await _discord.CreateGlobalApplicationCommandAsync(removeRoleCommand.Build());
                 if (!checkCommands.Exists(_ => _.Name == "add_role"))
                     await _discord.CreateGlobalApplicationCommandAsync(addRoleCommand.Build());
+                if (!checkCommands.Exists(_ => _.Name == "list_roles"))
+                    await _discord.CreateGlobalApplicationCommandAsync(listRolesCommand.Build());
                 var remove = checkCommands.Find(_ => _.Name == "newgame");
                 if (remove != null) await remove.DeleteAsync();
             }
