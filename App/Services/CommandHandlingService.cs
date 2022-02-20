@@ -255,9 +255,9 @@ namespace Reservator.Services
 
             var userMessages = await Utilities.BuildReservationMessage(_countryConfigs);
             var replyReservations = await toChannel.SendMessageAsync(userMessages);
-            var replyReactionsAllies = await toChannel.SendMessageAsync("Click on reaction to reserve/unreserve\nAllies:");
+            var replyReactionsAllies = await toChannel.SendMessageAsync("Click on reaction to reserve\nAllies:");
             var replyReactionsAxis = await toChannel.SendMessageAsync("Axis:");
-            var replyReactionsOther = await toChannel.SendMessageAsync("✋ Will show up (new players can use this)\n❌ Cancel reservation:");
+            var replyReactionsOther = await toChannel.SendMessageAsync("✋ Will show up\n❌ Cancel reservation:");
 
             _database.Add(new Game
             {
