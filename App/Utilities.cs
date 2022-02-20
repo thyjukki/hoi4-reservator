@@ -52,12 +52,12 @@ namespace Reservator
         {
             var bld = new StringBuilder();
 
-            bld.Append($"__**Current reservations ({game?.Reservations.Count ?? 0}):**__");
-            bld.Append("Use reactions to reserve a nation, if nation has a player you can also reserve it for coop, in case the player does not join or for experienced priority");
-            bld.Append("Experienced ranked players have a priority on majors.");
-            bld.Append("**Bolded** nations can only be reserved by experienced or intermediate players");
-            bld.Append("If you are new to the server but an **experienced MP player** and wish to play a major, please contact staff member for the rank.");
-            bld.Append("Cooping majors does not currently work for other ranks, use ✋ reaction if you are planing to coop");
+            bld.Append($"__**Current reservations ({game?.Reservations.Count ?? 0}):**__\n");
+            bld.Append("Use reactions to reserve a nation, if nation has a player you can also reserve it for coop, in case the player does not join or for experienced priority\n");
+            bld.Append("Experienced ranked players have a priority on majors.\n");
+            bld.Append("**Bolded** nations can only be reserved by experienced or intermediate players.\n");
+            bld.Append("If you are new to the server but an **experienced MP player** and wish to play a major, please contact staff member for the rank.\n");
+            bld.Append("Cooping majors does not currently work for other ranks, use ✋ reaction if you are planing to coop\n");
 
             await BuildCountryList(ccs, bld, discord, game);
 
