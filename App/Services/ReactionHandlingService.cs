@@ -56,6 +56,7 @@ namespace Reservator.Services
 
             var hasDeniedRole = Utilities.HasRole(channel, _database, gUser, "deny");
             var hasRestrictedRole = Utilities.HasRole(channel, _database, gUser, "restricted");
+            var hasMajorRole = Utilities.HasRole(channel, _database, gUser, "major");
 
             var country = Utilities.GetCountryFromEmote(_countryConfigService, reaction.Emote);
             if (reaction.Emote.Name is not ("✋" or "❌") && country == null) return;
@@ -68,8 +69,11 @@ namespace Reservator.Services
 
             if (country != null && !hasRestrictedRole && !hasDeniedRole)
             {
-                _database.Reservations.Add(new Reservation
-                    { Country = country.Name, Game = game, User = reaction.UserId });
+                if (hasMajorRole || !country.Major)
+                {
+                    _database.Reservations.Add(new Reservation
+                        { Country = country.Name, Game = game, User = reaction.UserId });
+                }
             }
             else if (reaction.Emote.Name == "✋" && !hasDeniedRole)
             {

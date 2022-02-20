@@ -12,6 +12,7 @@ namespace Reservator.Services
         public string Name { get; set; }
         public string Emoji { get; set; }
         public string Side { get; set; }
+        public bool Major { get; set; }
     }
 
     public class CountryConfigContainer

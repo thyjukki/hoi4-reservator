@@ -3,21 +3,18 @@
     {
       "Name": "USA",
       "Emoji": "\uD83C\uDDFA\uD83C\uDDF8",
-      "Side": "allies"
+      "Side": "allies",
+      "Major": true
     },
     {
       "Name": "UK",
       "Emoji": "\uD83C\uDDEC\uD83C\uDDE7",
-      "Side": "allies"
+      "Side": "allies",
+      "Major": true
     },
     {
       "Name": "France",
       "Emoji": "\uD83C\uDDEB\uD83C\uDDF7",
-      "Side": "allies"
-    },
-    {
-      "Name": "Poland",
-      "Emoji": "\uD83C\uDDF5\uD83C\uDDF1",
       "Side": "allies"
     },
     {
@@ -63,7 +60,8 @@
     {
       "Name": "Soviet",
       "Emoji": "\uD83C\uDDF7\uD83C\uDDFA",
-      "Side": "comitern"
+      "Side": "comitern",
+      "Major": true
     },
     {
       "Name": "Mongolia",
@@ -73,12 +71,14 @@
     {
       "Name": "Germany",
       "Emoji": "\uD83C\uDDE9\uD83C\uDDEA",
-      "Side": "axis"
+      "Side": "axis",
+      "Major": true
     },
     {
       "Name": "Italy",
       "Emoji": "\uD83C\uDDEE\uD83C\uDDF9",
-      "Side": "axis"
+      "Side": "axis",
+      "Major": true
     },
     {
       "Name": "Spain",
@@ -113,7 +113,8 @@
     {
       "Name": "Japan",
       "Emoji": "\uD83C\uDDEF\uD83C\uDDF5",
-      "Side": "copro"
+      "Side": "copro",
+      "Major": true
     },
     {
       "Name": "Manchukuo",

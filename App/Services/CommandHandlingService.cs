@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -56,7 +57,7 @@ namespace Reservator.Services
             // Let's add a switch statement for the command name so we can handle multiple commands in one event.
             switch(command.Data.Name)
             {
-                case "newgame":
+                case "new_game":
                     await HandleNewGameCommand(command);
                     break;
                 case "remove_game":
@@ -65,7 +66,110 @@ namespace Reservator.Services
                 case "remove_reservation":
                     await HandleRemoveReservationCommand(command);
                     break;
+                case "add_role":
+                    await HandleAddRoleCommand(command);
+                    break;
+                case "remove_role":
+                    await HandleRemoveRoleCommand(command);
+                    break;
             }
+        }
+
+        private async Task HandleRemoveRoleCommand(SocketSlashCommand command)
+        {
+            var parameters = command.Data.Options.ToDictionary(x => x.Name, x => x.Value);
+            if(!parameters.TryGetValue("role", out var roleObj))
+            {
+                await command.RespondAsync("No role specified");
+                return;
+            }
+            if(!parameters.TryGetValue("permission", out var permissionObj))
+            {
+                await command.RespondAsync("No permission specified");
+                return;
+            }
+
+            if (roleObj is not IRole role)
+            {
+                await command.RespondAsync("Need to be a valid guild role");
+                return;
+            }
+            var permission = permissionObj as string;
+            if (command.Channel is not IGuildChannel guildChannel)
+            {
+                await command.RespondAsync("Need to be a guild channel");
+                return;
+            }
+
+            if (permission != "admin" && permission != "deny" && permission != "restricted" && permission != "major")
+            {
+                await command.RespondAsync("Allowed permissions are admin, major deny and restricted");
+                return;
+            }
+
+            var guildRole = _database.GuildRoles.FirstOrDefault(guildRole =>
+                guildRole.GuildId == guildChannel.GuildId && guildRole.RoleId == role.Id &&
+                guildRole.Permission == permission);
+
+            if (guildRole == null)
+            {
+                await command.RespondAsync("Role has not been assigned the permission");
+                return;
+            }
+
+            _database.GuildRoles.Remove(guildRole);
+            _database.SaveChanges();
+            await command.RespondAsync("Permission removed from role");
+        }
+
+        private async Task HandleAddRoleCommand(SocketSlashCommand command)
+        {
+            var parameters = command.Data.Options.ToDictionary(x => x.Name, x => x.Value);
+            if(!parameters.TryGetValue("role", out var roleObj))
+            {
+                await command.RespondAsync("No role specified");
+                return;
+            }
+            if(!parameters.TryGetValue("permission", out var permissionObj))
+            {
+                await command.RespondAsync("No permission specified");
+                return;
+            }
+
+            if (roleObj is not IRole role)
+            {
+                await command.RespondAsync("Need to be a valid guild role");
+                return;
+            }
+            var permission = permissionObj as string;
+            if (command.Channel is not IGuildChannel guildChannel)
+            {
+                await command.RespondAsync("Need to be a guild channel");
+                return;
+            }
+
+
+            if (permission != "admin" && permission != "major" && permission != "deny" && permission != "restricted")
+            {
+                await command.RespondAsync("Allowed permissions are admin, major, deny and restricted");
+                return;
+            }
+
+            var guildRole = _database.GuildRoles.FirstOrDefault(guildRole =>
+                guildRole.GuildId == guildChannel.GuildId && guildRole.RoleId == role.Id &&
+                guildRole.Permission == permission);
+
+            if (_database.GuildRoles.ToList().Exists(_ =>
+                    _.GuildId == guildChannel.GuildId && _.RoleId == role.Id && _.Permission == permission))
+            {
+                await command.RespondAsync("Role has already been assigned {permission}");
+                return;
+            }
+
+            _database.GuildRoles.Add(new GuildRoles
+                { GuildId = guildChannel.GuildId, RoleId = role.Id, Permission = permission });
+            _database.SaveChanges();
+            await command.RespondAsync($"Role added as {permission}");
         }
 
         private async Task HandleRemoveReservationCommand(SocketSlashCommand command)
@@ -196,6 +300,29 @@ namespace Reservator.Services
                 .AddOption("user", ApplicationCommandOptionType.User, "Remove a reservation of a user", isRequired: true)
                 .AddOption("channel", ApplicationCommandOptionType.Channel, "Channel to remove the reservation from, defaults to current channel", isRequired: false);
 
+
+            var permissionsListBuilder = new SlashCommandOptionBuilder()
+                .WithName("permission")
+                .WithDescription("The rating your willing to give our bot")
+                .WithRequired(true)
+                .AddChoice("Admin", "admin")
+                .AddChoice("Major", "major")
+                .AddChoice("Restricted", "restricted")
+                .AddChoice("Denied", "deny")
+                .WithType(ApplicationCommandOptionType.String);
+            var removeRoleCommand = new SlashCommandBuilder()
+                .WithName("remove_role")
+                .WithDescription("Remove role permission")
+                .AddOption("role", ApplicationCommandOptionType.Role, "Role to remove permissions from",
+                    isRequired: true)
+                .AddOption(permissionsListBuilder);
+                var addRoleCommand = new SlashCommandBuilder()
+                    .WithName("add_role")
+                    .WithDescription("Add role permission")
+                    .AddOption("role", ApplicationCommandOptionType.Role, "Role to add permissions to",
+                        isRequired: true)
+                .AddOption(permissionsListBuilder);
+
             try
             {
                 if (!checkCommands.Exists(_ => _.Name == "new_game"))
@@ -204,6 +331,10 @@ namespace Reservator.Services
                     await _discord.CreateGlobalApplicationCommandAsync(removeGameCommand.Build());
                 if (!checkCommands.Exists(_ => _.Name == "remove_reservation"))
                     await _discord.CreateGlobalApplicationCommandAsync(removeReservationCommand.Build());
+                if (!checkCommands.Exists(_ => _.Name == "remove_role"))
+                    await _discord.CreateGlobalApplicationCommandAsync(removeRoleCommand.Build());
+                if (!checkCommands.Exists(_ => _.Name == "add_role"))
+                    await _discord.CreateGlobalApplicationCommandAsync(addRoleCommand.Build());
                 var remove = checkCommands.Find(_ => _.Name == "newgame");
                 if (remove != null) await remove.DeleteAsync();
             }

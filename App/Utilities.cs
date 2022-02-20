@@ -32,7 +32,9 @@ namespace Reservator
                     faction = country.Side;
                 }
 
-                bld.Append($"\n{country.Emoji} {country.Name}: ");
+                bld.Append(country.Major
+                    ? $"\n{country.Emoji} **{country.Name}**: "
+                    : $"\n{country.Emoji} {country.Name}: ");
 
                 var reservations = game?.Reservations.Where(_ => _.Country == country.Name).ToList();
                 if (discord == null || reservations is not { Count: > 0 }) continue;
