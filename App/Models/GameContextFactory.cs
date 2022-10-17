@@ -5,27 +5,33 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace Reservator.Models
+namespace Reservator.Models;
+
+public class GameContextFactory : IDesignTimeDbContextFactory<GameContext>
 {
-    public class GameContextFactory : IDesignTimeDbContextFactory<GameContext>
+    public GameContext CreateDbContext(string[] args)
     {
-        public GameContext CreateDbContext(string[] args)
+        var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
+        var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
+        
+        switch (configuration["DB_TYPE"])
         {
-            var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
-            var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
-            
-            var serverVersion = new MySqlServerVersion(new Version(8, 0, 22));
-            var config = new StringBuilder("server=ENVHOST;database=ENVDB;user=ENVUSER;password=ENVPW;");
-            var conn = config.Replace("ENVHOST", configuration["DB_HOST"])
-                .Replace("ENVDB", configuration["DB_DATABASE"])
-                .Replace("ENVUSER", configuration["DB_USER"])
-                .Replace("ENVPW", configuration["DB_PW"])
-                .ToString();
-            
-            optionsBuilder.UseMySql(conn, serverVersion);
+            case "MySql":
+                var conn =
+                    $"Server={configuration["DB_HOST"]};Database={configuration["DB_DATABASE"]};User={configuration["DB_USER"]};Password={configuration["DB_PW"]};";
+                var serverVersion = new MySqlServerVersion(new Version(8, 0, 22));
+                optionsBuilder.UseMySql(conn, serverVersion);
+                break;
+            case "Sqlite":
+                optionsBuilder.UseSqlite("Data Source=LocalDatabase.db");
+                break;
+            default:
+                optionsBuilder.UseSqlite("Data Source=LocalDatabase.db");
+                Console.WriteLine("Defaulting to Sqlite");
+                break;
+        }
 
   
-            return new GameContext(optionsBuilder.Options);
-        }
+        return new GameContext(optionsBuilder.Options);
     }
 }
